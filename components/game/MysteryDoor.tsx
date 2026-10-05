@@ -1,20 +1,6 @@
 'use client';
 
-type MysteryDoorProps = {
-  unlocked: boolean;
-  onInspect: () => void;
-  onEnter: () => void;
-};
-
-export default function MysteryDoor({ unlocked, onInspect, onEnter }: MysteryDoorProps) {
-  return (
-    <button
-      className={`door ${unlocked ? 'unlocked' : ''}`}
-      onClick={unlocked ? onEnter : onInspect}
-      aria-label={unlocked ? 'Enter the awakened door' : 'Inspect the mysterious door'}
-      type="button"
-    >
-      <span>{unlocked ? 'ENTER' : 'DOOR'}</span>
-    </button>
-  );
+type Props = { awake: boolean; discovered: boolean; onMove: () => void };
+export default function MysteryDoor({ awake, discovered, onMove }: Props) {
+  return <button className={`hotspot door ${awake ? 'unlocked' : ''} ${discovered ? 'noticed' : ''}`} style={{ left: '76%', top: '22%' }} onClick={onMove} aria-label="Move toward the door" type="button"><span>{awake ? 'OPEN' : 'DOOR'}</span></button>;
 }
