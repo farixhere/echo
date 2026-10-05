@@ -342,7 +342,7 @@ export default function EchoRoom() {
       <section className="story-card" aria-live="polite">
         <div className="story-topline">
           <span>{story.chapter}</span>
-          <span>{story.routeLabel}</span>
+          <span>{story.route === 'unwritten' ? 'PATH UNWRITTEN' : `PATH: ${story.route.toUpperCase()} · ${story.branchKey}`}</span>
         </div>
         <p>{story.narration}</p>
         <div className="story-progress" aria-label={`Story progress ${storyProgress}%`}><span style={{ width: `${storyProgress}%` }} /></div>
