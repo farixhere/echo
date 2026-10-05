@@ -18,3 +18,11 @@ export type EchoState = {
 };
 
 export type ChoiceTarget = Exclude<HotspotId, 'door'> | null;
+
+export type WorldConsequence = {
+  memories: number;
+  orbTaken: boolean;
+  windowOpened: boolean;
+  stoneMoved: boolean;
+  hasCompleteSet: boolean;
+};
