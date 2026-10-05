@@ -19,7 +19,7 @@ export default function EchoRoom() {
   useEffect(() => { setState(loadEchoState()); setHydrated(true); }, []);
   useEffect(() => { if (hydrated) saveEchoState(state); }, [hydrated, state]);
 
-  const nearest = useMemo(() => {
+  const nearest = useMemo<HotspotId | null>(() => {
     let best: HotspotId | null = null; let distance = Infinity;
     (Object.keys(spots) as HotspotId[]).forEach((id) => {
       const [x,y] = spots[id]; const d = Math.hypot(state.playerX-x, state.playerY-y);
