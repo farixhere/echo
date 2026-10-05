@@ -27,3 +27,7 @@
 @media(max-width:600px){.story-card{padding:13px 14px}.story-topline{font-size:7px}.story-topline span:last-child{white-space:nowrap}.story-card p{font-size:11px}.story-card small{font-size:8px}}
 
 .story-progress{height:3px;margin:9px 0 8px;border-radius:999px;background:#17212a;overflow:hidden}.story-progress span{display:block;height:100%;border-radius:inherit;background:var(--accent);box-shadow:0 0 10px rgba(155,226,255,.35);transition:width .45s ease}.route-thief .story-progress span{background:#e5c48f}.route-witness .story-progress span{background:#9be2ff}.route-breach .story-progress span{background:#c9a7ff}.route-keeper .story-progress span{background:#b8d7c4}@media(prefers-reduced-motion:reduce){.story-progress span{transition:none}}
+
+/* Story chapter + branch identity */
+.story-title-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-top:7px}.story-title-row strong{font-size:15px;letter-spacing:-.02em;color:#eef7fb}.story-title-row span{flex:none;color:#526675;font-size:7px;letter-spacing:.18em}.route-thief .story-card{border-color:rgba(230,190,145,.18)}.route-witness .story-card{border-color:rgba(145,220,240,.2)}.route-breach .story-card{border-color:rgba(195,165,245,.2)}.route-keeper .story-card{border-color:rgba(180,205,215,.16)}
+@media(max-width:600px){.story-title-row strong{font-size:13px}.story-title-row span{font-size:6px}}
