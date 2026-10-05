@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { EchoState, HotspotId } from '../../types/game';
-import { awakenDoor, discover, findEcho, initialEchoState } from '../../lib/game-state';
-import { clearEchoState, loadEchoState, saveEchoState } from '../../lib/storage';
+import type { EchoState, HotspotId, WorldMemory } from '../../types/game';
+import { awakenDoor, discover, findEcho, initialEchoState, initialWorldMemory } from '../../lib/game-state';
+import { clearEchoState, loadEchoState, loadWorldMemory, saveEchoState, saveWorldMemory } from '../../lib/storage';
 import Atmosphere from './Atmosphere';
 import MemoryOrb from './MemoryOrb';
 import MysteryDoor from './MysteryDoor';
@@ -23,93 +23,81 @@ const names: Record<HotspotId, string> = {
 };
 
 type Point = [number, number];
+type ChoiceTarget = 'orb' | 'window' | 'stone' | null;
 
 export default function EchoRoom() {
   const [state, setState] = useState<EchoState>(initialEchoState);
+  const [world, setWorld] = useState<WorldMemory>(initialWorldMemory);
   const [message, setMessage] = useState('You wake in a room you do not remember entering. Explore.');
+  const [choiceTarget, setChoiceTarget] = useState<ChoiceTarget>(null);
   const [hydrated, setHydrated] = useState(false);
   const [path, setPath] = useState<Point[]>([[50,72]]);
   const [echoIndex, setEchoIndex] = useState(0);
 
   useEffect(() => {
     setState(loadEchoState());
+    setWorld(loadWorldMemory());
     setHydrated(true);
   }, []);
 
-  useEffect(() => {
-    if (hydrated) saveEchoState(state);
-  }, [hydrated, state]);
+  useEffect(() => { if (hydrated) saveEchoState(state); }, [hydrated, state]);
+  useEffect(() => { if (hydrated) saveWorldMemory(world); }, [hydrated, world]);
 
   const nearest = useMemo<HotspotId | null>(() => {
     let best: HotspotId | null = null;
     let distance = Infinity;
-
     (Object.keys(spots) as HotspotId[]).forEach((id) => {
-      const [x, y] = spots[id];
-      const d = Math.hypot(state.playerX - x, state.playerY - y);
-      if (d < distance) {
-        distance = d;
-        best = id;
-      }
+      const [x,y] = spots[id];
+      const d = Math.hypot(state.playerX-x, state.playerY-y);
+      if (d < distance) { distance = d; best = id; }
     });
-
     return distance < 10 ? best : null;
   }, [state.playerX, state.playerY]);
 
   const echoActive = state.discovered.length >= 2 && path.length >= 5 && !state.hasSeenEcho;
 
   useEffect(() => {
-    if (!echoActive) {
-      setEchoIndex(0);
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      setEchoIndex((index) => (index + 1) % path.length);
-    }, 260);
-
+    if (!echoActive) { setEchoIndex(0); return; }
+    const timer = window.setInterval(() => setEchoIndex((index) => (index + 1) % path.length), 260);
     return () => window.clearInterval(timer);
   }, [echoActive, path.length]);
 
   const echoPosition = path[echoIndex] ?? path[0] ?? [50,72];
-  const echoNearPlayer = echoActive &&
-    Math.hypot(state.playerX - echoPosition[0], state.playerY - echoPosition[1]) < 7;
+  const echoNearPlayer = echoActive && Math.hypot(state.playerX-echoPosition[0], state.playerY-echoPosition[1]) < 7;
 
   useEffect(() => {
     if (!echoNearPlayer || state.hasSeenEcho) return;
     setState((s) => findEcho(s));
-    setMessage('You find someone standing exactly where you stood moments ago. It is not you.');
-  }, [echoNearPlayer, state.hasSeenEcho]);
+    setMessage(world.runs > 0
+      ? 'The echo stops where your last run ended. It has been waiting.'
+      : 'You find someone standing exactly where you stood moments ago. It is not you.');
+  }, [echoNearPlayer, state.hasSeenEcho, world.runs]);
 
-  function rememberStep(x: number, y: number) {
+  function rememberStep(x:number,y:number) {
     setPath((previous) => {
-      const last = previous[previous.length - 1];
-      if (last && Math.hypot(last[0] - x, last[1] - y) < 1.5) return previous;
-      return [...previous.slice(-31), [x, y]];
+      const last=previous[previous.length-1];
+      if (last && Math.hypot(last[0]-x,last[1]-y)<1.5) return previous;
+      return [...previous.slice(-31),[x,y]];
     });
   }
 
-  function moveTo(x: number, y: number) {
-    const nextX = Math.min(92, Math.max(8, x));
-    const nextY = Math.min(90, Math.max(12, y));
-    rememberStep(nextX, nextY);
-    setState((s) => ({ ...s, playerX: nextX, playerY: nextY }));
+  function moveTo(x:number,y:number) {
+    const nextX=Math.min(92,Math.max(8,x));
+    const nextY=Math.min(90,Math.max(12,y));
+    rememberStep(nextX,nextY);
+    setState((s)=>({...s,playerX:nextX,playerY:nextY}));
     setMessage('');
+    setChoiceTarget(null);
   }
 
-  function moveBy(dx: number, dy: number) {
-    moveTo(state.playerX + dx, state.playerY + dy);
-  }
+  function moveBy(dx:number,dy:number) { moveTo(state.playerX+dx,state.playerY+dy); }
 
   function interact() {
     if (!nearest) return;
 
     if (nearest === 'door' && !state.doorAwake) {
-      if (!state.discovered.includes('orb')) {
-        setMessage('The door has no handle. Something in the room must come first.');
-        return;
-      }
-      setState((s) => awakenDoor(discover(s, 'door')));
+      if (!state.discovered.includes('orb')) { setMessage('The door has no handle. Something in the room must come first.'); return; }
+      setState((s)=>awakenDoor(discover(s,'door')));
       setMessage('The door remembers you. It opens without being touched.');
       return;
     }
@@ -120,136 +108,105 @@ export default function EchoRoom() {
       return;
     }
 
-    setState((s) => discover(s, nearest));
+    if ((nearest === 'orb' && !world.orbChoice) || (nearest === 'window' && !world.windowChoice) || (nearest === 'stone' && !world.stoneChoice)) {
+      setChoiceTarget(nearest);
+      return;
+    }
 
-    const text: Record<HotspotId, string> = {
-      orb: 'You reach toward the light. It pulses in time with your movement.',
-      window: 'Outside: rain, but no sky. You feel certain you have seen this view before.',
-      stone: 'A small stone. There is a fingerprint pressed into its surface — yours.',
+    setState((s)=>discover(s,nearest));
+    const text:Record<HotspotId,string> = {
+      orb: world.orbChoice === 'taken' ? 'The empty place where the light was still feels warm.' : 'The light pulses. It remembers being left behind.',
+      window: world.windowChoice === 'opened' ? 'Rain is falling inward now. The room has changed its mind.' : 'The window is shut. Something outside is waiting.',
+      stone: world.stoneChoice === 'moved' ? 'The stone is gone. But its fingerprint remains on the floor.' : 'The stone has not moved. It feels heavier than before.',
       door: 'The door is older than the room. It seems to be waiting for a memory.',
     };
-
+    setState((s)=>discover(s,nearest));
     setMessage(text[nearest]);
   }
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') moveBy(0,-3);
-      if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') moveBy(0,3);
-      if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') moveBy(-3,0);
-      if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') moveBy(3,0);
-      if (e.key === ' ' || e.key === 'Enter') interact();
-    };
+  function choose(choice: 'orb-taken'|'orb-left'|'window-opened'|'window-closed'|'stone-moved'|'stone-kept') {
+    if (!choiceTarget) return;
+    const nextWorld: WorldMemory = { ...world };
+    if (choice.startsWith('orb-')) nextWorld.orbChoice = choice === 'orb-taken' ? 'taken' : 'left';
+    if (choice.startsWith('window-')) nextWorld.windowChoice = choice === 'window-opened' ? 'opened' : 'closed';
+    if (choice.startsWith('stone-')) nextWorld.stoneChoice = choice === 'stone-moved' ? 'moved' : 'kept';
 
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    setWorld(nextWorld);
+    setState((s)=>discover(s,choiceTarget));
+    const text = {
+      'orb-taken':'The light collapses into your hand. The room goes darker.',
+      'orb-left':'You leave the light where it is. It follows you with its gaze.',
+      'window-opened':'You open the window. The rain comes in, but there is no sky.',
+      'window-closed':'You close the window. The rain outside stops instantly.',
+      'stone-moved':'You move the stone. Beneath it is a second fingerprint.',
+      'stone-kept':'You leave the stone untouched. Somewhere, something exhales.',
+    }[choice];
+    setChoiceTarget(null);
+    setMessage(text);
+  }
+
+  useEffect(() => {
+    const onKey=(e:KeyboardEvent)=>{
+      if(choiceTarget) return;
+      if(e.key==='ArrowUp'||e.key.toLowerCase()==='w') moveBy(0,-3);
+      if(e.key==='ArrowDown'||e.key.toLowerCase()==='s') moveBy(0,3);
+      if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a') moveBy(-3,0);
+      if(e.key==='ArrowRight'||e.key.toLowerCase()==='d') moveBy(3,0);
+      if(e.key===' '||e.key==='Enter') interact();
+    };
+    window.addEventListener('keydown',onKey);
+    return()=>window.removeEventListener('keydown',onKey);
   });
 
-  function reset() {
+  function resetRun() {
+    const nextWorld={...world,runs:world.runs+1};
+    setWorld(nextWorld);
+    saveWorldMemory(nextWorld);
     setState(initialEchoState);
     setPath([[50,72]]);
     setEchoIndex(0);
-    setMessage('The room forgets. You wake again.');
+    setChoiceTarget(null);
+    setMessage('The room forgets your body. It does not forget your choices.');
     clearEchoState();
   }
 
-  const status = state.hasSeenEcho
-    ? 'ECHO FOUND'
-    : echoActive
-      ? 'SOMETHING REMEMBERS'
-      : state.doorAwake
-        ? 'DOOR AWAKE'
-        : state.discovered.length
-          ? 'EXPLORING'
-          : 'DORMANT';
+  const status = state.hasSeenEcho ? 'ECHO FOUND' : echoActive ? 'SOMETHING REMEMBERS' : state.doorAwake ? 'DOOR AWAKE' : state.discovered.length ? 'EXPLORING' : 'DORMANT';
 
-  return (
-    <main className="game-shell">
-      <header className="hud">
-        <div>
-          <span className="eyebrow">PROJECT 03 · MEMORY 01</span>
-          <h1>ECHO</h1>
-          <p>Nothing here tells you what to do.</p>
+  return <main className="game-shell">
+    <header className="hud">
+      <div><span className="eyebrow">PROJECT 03 · MEMORY 01</span><h1>ECHO</h1><p>{world.runs ? `RUN ${world.runs + 1} · THE ROOM REMEMBERS` : 'Nothing here tells you what to do.'}</p></div>
+      <button className="reset" onClick={resetRun} type="button">Begin again</button>
+    </header>
+
+    <section className={`room ${state.discovered.length?'awakened':''} ${echoActive?'echo-active':''} ${world.orbChoice==='taken'?'orb-missing':''} ${world.windowChoice==='opened'?'window-opened':''} ${world.stoneChoice==='moved'?'stone-moved':''}`} aria-label="An explorable memory room" onClick={(e)=>{
+      if(e.target===e.currentTarget&&!choiceTarget){const r=e.currentTarget.getBoundingClientRect();moveTo(((e.clientX-r.left)/r.width)*100,((e.clientY-r.top)/r.height)*100);}
+    }}>
+      <Atmosphere discovered={state.discovered} onMove={moveTo}/>
+      <MysteryDoor awake={state.doorAwake} discovered={state.discovered.includes('door')} onMove={()=>moveTo(...spots.door)}/>
+      <MemoryOrb discovered={state.discovered.includes('orb')} onMove={()=>moveTo(...spots.orb)}/>
+
+      {path.length>2&&<div className="memory-path" aria-hidden="true">{path.filter((_,index)=>index%3===0).map(([x,y],index)=><i key={`${x}-${y}-${index}`} style={{left:`${x}%`,top:`${y}%`}}/>)}</div>}
+      {echoActive&&<div className={`echo-figure ${echoNearPlayer?'close':''}`} style={{left:`${echoPosition[0]}%`,top:`${echoPosition[1]}%`}} aria-hidden="true"><span/></div>}
+      <div className={`player ${nearest?'near':''}`} style={{left:`${state.playerX}%`,top:`${state.playerY}%`}} aria-label="You"/>
+      {state.hasSeenEcho&&<div className="echo-trace" aria-hidden="true"/>}
+
+      {choiceTarget&&<div className="choice-card" role="dialog" aria-label="A memory choice">
+        <span className="choice-kicker">THE ROOM WILL REMEMBER THIS</span>
+        <strong>{choiceTarget==='orb'?'THE LIGHT':choiceTarget==='window'?'THE WINDOW':'THE STONE'}</strong>
+        <p>{choiceTarget==='orb'?'Take it, or leave it behind.':choiceTarget==='window'?'Open it, or keep the rain outside.':'Move it, or trust what is underneath.'}</p>
+        <div className="choice-actions">
+          {choiceTarget==='orb'&&<><button onClick={()=>choose('orb-taken')}>TAKE THE LIGHT</button><button onClick={()=>choose('orb-left')}>LEAVE IT</button></>}
+          {choiceTarget==='window'&&<><button onClick={()=>choose('window-opened')}>OPEN WINDOW</button><button onClick={()=>choose('window-closed')}>KEEP IT CLOSED</button></>}
+          {choiceTarget==='stone'&&<><button onClick={()=>choose('stone-moved')}>MOVE STONE</button><button onClick={()=>choose('stone-kept')}>LEAVE IT</button></>}
         </div>
-        <button className="reset" onClick={reset} type="button">Reset memory</button>
-      </header>
+      </div>}
 
-      <section
-        className={`room ${state.discovered.length ? 'awakened' : ''} ${echoActive ? 'echo-active' : ''}`}
-        aria-label="An explorable memory room"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            const r = e.currentTarget.getBoundingClientRect();
-            moveTo(((e.clientX-r.left)/r.width)*100, ((e.clientY-r.top)/r.height)*100);
-          }
-        }}
-      >
-        <Atmosphere discovered={state.discovered} onMove={moveTo} />
-        <MysteryDoor
-          awake={state.doorAwake}
-          discovered={state.discovered.includes('door')}
-          onMove={() => moveTo(...spots.door)}
-        />
-        <MemoryOrb
-          discovered={state.discovered.includes('orb')}
-          onMove={() => moveTo(...spots.orb)}
-        />
+      {nearest&&!choiceTarget&&<button className="interact" onClick={interact} type="button">{nearest==='door'&&state.doorAwake?'ENTER':`EXAMINE ${names[nearest].toUpperCase()}`}<span>SPACE</span></button>}
+      <div className="hint">CLICK TO MOVE · WASD / ARROWS · EXAMINE WHEN CLOSE</div>
+      {echoActive&&!echoNearPlayer&&<div className="echo-whisper">SOMETHING IS WALKING YOUR OLD PATH</div>}
+    </section>
 
-        {path.length > 2 && (
-          <div className="memory-path" aria-hidden="true">
-            {path.filter((_, index) => index % 3 === 0).map(([x,y], index) => (
-              <i key={`${x}-${y}-${index}`} style={{ left: `${x}%`, top: `${y}%` }} />
-            ))}
-          </div>
-        )}
-
-        {echoActive && (
-          <div
-            className={`echo-figure ${echoNearPlayer ? 'close' : ''}`}
-            style={{ left: `${echoPosition[0]}%`, top: `${echoPosition[1]}%` }}
-            aria-hidden="true"
-          >
-            <span />
-          </div>
-        )}
-
-        <div
-          className={`player ${nearest ? 'near' : ''}`}
-          style={{ left: `${state.playerX}%`, top: `${state.playerY}%` }}
-          aria-label="You"
-        />
-
-        {state.hasSeenEcho && <div className="echo-trace" aria-hidden="true" />}
-
-        {nearest && (
-          <button className="interact" onClick={interact} type="button">
-            {nearest === 'door' && state.doorAwake ? 'ENTER' : `EXAMINE ${names[nearest].toUpperCase()}`}
-            <span>SPACE</span>
-          </button>
-        )}
-
-        <div className="hint">
-          CLICK TO MOVE · WASD / ARROWS · EXAMINE WHEN CLOSE
-        </div>
-
-        {echoActive && !echoNearPlayer && (
-          <div className="echo-whisper">SOMETHING IS WALKING YOUR OLD PATH</div>
-        )}
-      </section>
-
-      <section className="message" aria-live="polite">
-        <span className="dot" aria-hidden="true" />
-        {message || 'The room listens.'}
-      </section>
-
-      <div className="progress">
-        <span>MEMORIES</span>
-        <strong>{state.memoryCount}</strong>
-        <span className="separator">·</span>
-        <span>{status}</span>
-        <span className="separator">·</span>
-        <span>{state.discovered.length}/4 FOUND</span>
-      </div>
-    </main>
-  );
+    <section className="message" aria-live="polite"><span className="dot" aria-hidden="true"/>{message||'The room listens.'}</section>
+    <div className="progress"><span>RUNS</span><strong>{world.runs+1}</strong><span className="separator">·</span><span>MEMORIES</span><strong>{state.memoryCount}</strong><span className="separator">·</span><span>{status}</span><span className="separator">·</span><span>{state.discovered.length}/4 FOUND</span></div>
+  </main>;
 }
