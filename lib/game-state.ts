@@ -1,4 +1,4 @@
-import type { EchoState, HotspotId } from '../types/game';
+import type { EchoState, HotspotId, WorldMemory } from '../types/game';
 
 export const initialEchoState: EchoState = {
   playerX: 50,
@@ -8,6 +8,8 @@ export const initialEchoState: EchoState = {
   doorAwake: false,
   hasSeenEcho: false,
 };
+
+export const initialWorldMemory: WorldMemory = { runs: 0 };
 
 export function parseEchoState(value: string | null): EchoState {
   if (!value) return initialEchoState;
@@ -23,6 +25,19 @@ export function parseEchoState(value: string | null): EchoState {
       hasSeenEcho: Boolean(parsed.hasSeenEcho),
     };
   } catch { return initialEchoState; }
+}
+
+export function parseWorldMemory(value: string | null): WorldMemory {
+  if (!value) return initialWorldMemory;
+  try {
+    const parsed = JSON.parse(value) as Partial<WorldMemory>;
+    return {
+      runs: typeof parsed.runs === 'number' ? Math.max(0, Math.floor(parsed.runs)) : 0,
+      orbChoice: parsed.orbChoice === 'taken' || parsed.orbChoice === 'left' ? parsed.orbChoice : undefined,
+      windowChoice: parsed.windowChoice === 'opened' || parsed.windowChoice === 'closed' ? parsed.windowChoice : undefined,
+      stoneChoice: parsed.stoneChoice === 'moved' || parsed.stoneChoice === 'kept' ? parsed.stoneChoice : undefined,
+    };
+  } catch { return initialWorldMemory; }
 }
 
 export function discover(state: EchoState, id: HotspotId): EchoState {
