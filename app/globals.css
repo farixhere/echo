@@ -12,3 +12,16 @@
 .memory-complete .memory-counter{color:var(--accent);border-color:rgba(155,226,255,.3);box-shadow:0 0 20px rgba(100,190,240,.08)}
 @media(max-width:600px){.memory-counter{top:12px;right:12px;font-size:7px}}
 @media(prefers-reduced-motion:reduce){.memory-counter{backdrop-filter:none}}
+
+/* Branching story layer */
+.story-card{margin:0 0 12px;padding:15px 17px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(110deg,rgba(11,15,21,.96),rgba(10,18,25,.9));box-shadow:0 12px 35px rgba(0,0,0,.16)}
+.story-topline{display:flex;justify-content:space-between;gap:12px;color:var(--accent);font-size:8px;font-weight:700;letter-spacing:.16em}
+.story-card p{margin:8px 0 5px;color:#cbd6df;font-size:12px;line-height:1.55;max-width:850px}
+.story-card small{color:#697988;font-size:9px;letter-spacing:.08em}
+.route-thief .orb,.route-thief .door{box-shadow:0 0 45px rgba(150,185,210,.12)}
+.route-witness .window{box-shadow:0 0 45px rgba(120,210,240,.12)}
+.route-breach .stone,.route-breach .door{box-shadow:0 0 45px rgba(165,130,210,.12)}
+.route-keeper .room{}
+.route-thief .memory-counter{border-color:rgba(255,220,180,.25)}
+.route-breach .memory-counter{border-color:rgba(200,170,255,.25)}
+@media(max-width:600px){.story-card{padding:13px 14px}.story-topline{font-size:7px}.story-topline span:last-child{white-space:nowrap}.story-card p{font-size:11px}.story-card small{font-size:8px}}
