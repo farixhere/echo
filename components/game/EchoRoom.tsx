@@ -20,7 +20,7 @@ import {
 import Atmosphere from './Atmosphere';
 import MemoryOrb from './MemoryOrb';
 import MysteryDoor from './MysteryDoor';
-import { getStoryState } from '../../lib/story';
+import { getStoryProgress, getStoryState } from '../../lib/story';
 
 const spots: Record<HotspotId, [number, number]> = {
   orb: [48, 59],
@@ -66,6 +66,7 @@ export default function EchoRoom() {
 
   const consequences = useMemo(() => getWorldConsequences(world), [world]);
   const story = useMemo(() => getStoryState(world), [world]);
+  const storyProgress = useMemo(() => getStoryProgress(world), [world]);
 
   useEffect(() => {
     setState(loadEchoState());
@@ -340,10 +341,11 @@ export default function EchoRoom() {
 
       <section className="story-card" aria-live="polite">
         <div className="story-topline">
-          <span>{story.title}</span>
-          <span>{story.route === 'unwritten' ? 'PATH UNWRITTEN' : `PATH: ${story.route.toUpperCase()}`}</span>
+          <span>{story.chapter}</span>
+          <span>{story.routeLabel}</span>
         </div>
         <p>{story.narration}</p>
+        <div className="story-progress" aria-label={`Story progress ${storyProgress}%`}><span style={{ width: `${storyProgress}%` }} /></div>
         <small>{story.objective}</small>
       </section>
 
