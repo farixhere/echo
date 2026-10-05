@@ -20,6 +20,7 @@ import {
 import Atmosphere from './Atmosphere';
 import MemoryOrb from './MemoryOrb';
 import MysteryDoor from './MysteryDoor';
+import { getStoryState, type StoryRoute } from '../../lib/story';
 
 const spots: Record<HotspotId, [number, number]> = {
   orb: [48, 59],
@@ -64,6 +65,7 @@ export default function EchoRoom() {
   const [echoIndex, setEchoIndex] = useState(0);
 
   const consequences = useMemo(() => getWorldConsequences(world), [world]);
+  const story = useMemo(() => getStoryState(world), [world]);
 
   useEffect(() => {
     setState(loadEchoState());
@@ -122,7 +124,7 @@ export default function EchoRoom() {
     setState((current) => findEcho(current));
     setMessage(
       world.runs > 0
-        ? 'The echo stops where your last run ended. It has been waiting.'
+        ? `The echo stops where your last run ended. ${story.route === 'thief' ? 'It holds out an empty hand.' : story.route === 'breach' ? 'It points toward the mark beneath the stone.' : 'It has been waiting.'}`
         : 'You find someone standing exactly where you stood moments ago. It is not you.',
     );
   }, [echoNearPlayer, state.hasSeenEcho, world.runs]);
@@ -225,9 +227,11 @@ export default function EchoRoom() {
 
       setState((current) => awakenDoor(current));
       setMessage(
-        consequences.stoneMoved
-          ? 'The door remembers the stone. It opens without being touched.'
-          : 'The door remembers you. It opens without being touched.',
+        story.stage === 'the-revelation'
+          ? 'The door remembers everything. It opens onto the moment the room has reconstructed.'
+          : consequences.stoneMoved
+            ? 'The door remembers the stone. It opens without being touched.'
+            : 'The door remembers you. It opens without being touched.',
       );
       return;
     }
@@ -235,9 +239,11 @@ export default function EchoRoom() {
     if (nearest === 'door' && state.doorAwake) {
       setState(findEcho);
       setMessage(
-        consequences.hasCompleteSet
-          ? 'You step through. Behind you, the room remembers every choice you made.'
-          : 'You step through. Somewhere behind you, your first footsteps happen again.',
+        story.stage === 'the-revelation'
+          ? `${story.narration} The memory is not an ending. Something is still missing.`
+          : consequences.hasCompleteSet
+            ? 'You step through. Behind you, the room remembers every choice you made.'
+            : 'You step through. Somewhere behind you, your first footsteps happen again.',
       );
       return;
     }
@@ -274,7 +280,7 @@ export default function EchoRoom() {
     setWorld(nextWorld);
     setState((current) => discover(current, choiceTarget));
     setChoiceTarget(null);
-    setMessage(choiceCopy[choice]);
+    setMessage(`${choiceCopy[choice]} ${getStoryState(nextWorld).clue}`);
   }
 
   useEffect(() => {
@@ -332,6 +338,15 @@ export default function EchoRoom() {
         </button>
       </header>
 
+      <section className="story-card" aria-live="polite">
+        <div className="story-topline">
+          <span>{story.title}</span>
+          <span>{story.route === 'unwritten' ? 'PATH UNWRITTEN' : `PATH: ${story.route.toUpperCase()}`}</span>
+        </div>
+        <p>{story.narration}</p>
+        <small>{story.objective}</small>
+      </section>
+
       <section
         className={[
           'room',
@@ -341,6 +356,7 @@ export default function EchoRoom() {
           consequences.windowOpened ? 'window-opened' : '',
           consequences.stoneMoved ? 'stone-moved' : '',
           consequences.hasCompleteSet ? 'memory-complete' : '',
+          `route-${story.route}`,
         ].filter(Boolean).join(' ')}
         aria-label="An explorable memory room"
         onClick={(event) => {
