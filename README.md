@@ -7,14 +7,21 @@ ECHO is a small atmospheric browser game built around persistent consequences. T
 ## Current milestone
 
 - Next.js + TypeScript foundation
-- Single playable room
-- Orb interaction
-- Persistent memory state
-- Door consequence
-- Local save/load
-- Reset memory
+- Componentized first playable room
+- Memory orb interaction
+- Door consequence and echo payoff
+- Persistent local save/load
+- Safe state parsing and reset
 - Responsive mobile-first presentation
-- Reduced-motion support
+- Keyboard focus states and reduced-motion support
+
+## Project structure
+
+- `app/` — Next.js route and global styling
+- `components/game/` — interactive game scene components
+- `lib/` — game-state transitions and browser persistence
+- `types/` — shared game types
+- `public/` — future audio, artwork, and other static assets
 
 ## Run locally
 
@@ -24,12 +31,6 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
-
-## Architecture
-
-- `app/` — Next.js routes and global styling
-- `components/EchoRoom.tsx` — first playable room and interaction logic
-- `lib/game-state.ts` — persistent game-state model
 
 ## V1 boundaries
 
