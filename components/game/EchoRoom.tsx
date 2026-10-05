@@ -71,7 +71,7 @@ export default function EchoRoom() {
       <MemoryOrb discovered={state.discovered.includes('orb')} onMove={() => moveTo(...spots.orb)} />
       <div className={`player ${nearest ? 'near' : ''}`} style={{ left: `${state.playerX}%`, top: `${state.playerY}%` }} aria-label="You" />
       {state.hasSeenEcho && <div className="echo-trace" aria-hidden="true" />}
-      {nearest && <button className="interact" onClick={interact} type="button">{nearest === 'door' && state.doorAwake ? 'ENTER' : `EXAMINE ${names[nearest].toUpperCase()}`} <span>SPACE</span></button>}
+      {nearest && <button className="interact" onClick={interact} type="button">{nearest === 'door' && state.doorAwake ? 'ENTER' : `EXAMINE ${nearest ? names[nearest].toUpperCase() : ''}`} <span>SPACE</span></button>}
       <div className="hint">CLICK TO MOVE · WASD / ARROWS · EXAMINE WHEN CLOSE</div>
     </section>
     <section className="message" aria-live="polite"><span className="dot" aria-hidden="true" />{message || 'The room listens.'}</section>
