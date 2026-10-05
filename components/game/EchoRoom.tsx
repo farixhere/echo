@@ -20,7 +20,7 @@ import {
 import Atmosphere from './Atmosphere';
 import MemoryOrb from './MemoryOrb';
 import MysteryDoor from './MysteryDoor';
-import { getStoryState, type StoryRoute } from '../../lib/story';
+import { getStoryState } from '../../lib/story';
 
 const spots: Record<HotspotId, [number, number]> = {
   orb: [48, 59],
