@@ -1,6 +1,10 @@
+export type HotspotId = 'orb' | 'door' | 'window' | 'stone';
+
 export type EchoState = {
-  orbTouched: boolean;
-  doorUnlocked: boolean;
+  playerX: number;
+  playerY: number;
   memoryCount: number;
+  discovered: HotspotId[];
+  doorAwake: boolean;
   hasSeenEcho: boolean;
 };
