@@ -206,3 +206,11 @@ export function getStoryProgress(world: WorldMemory): number {
   const choices = Number(Boolean(world.orbChoice)) + Number(Boolean(world.windowChoice)) + Number(Boolean(world.stoneChoice));
   return choices === 0 ? 0 : choices === 1 ? 33 : choices === 2 ? 66 : 100;
 }
+
+
+export function getStoryProgress(world: WorldMemory): number {
+  const choices = Number(Boolean(world.orbChoice))
+    + Number(Boolean(world.windowChoice))
+    + Number(Boolean(world.stoneChoice));
+  return Math.round((choices / 3) * 100);
+}
