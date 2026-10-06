@@ -45,6 +45,8 @@ export function parseWorldMemory(value: string | null): WorldMemory {
       orbChoice: parsed.orbChoice === 'taken' || parsed.orbChoice === 'left' ? parsed.orbChoice : undefined,
       windowChoice: parsed.windowChoice === 'opened' || parsed.windowChoice === 'closed' ? parsed.windowChoice : undefined,
       stoneChoice: parsed.stoneChoice === 'moved' || parsed.stoneChoice === 'kept' ? parsed.stoneChoice : undefined,
+      echoResolved: Boolean(parsed.echoResolved),
+      endingsSeen: Array.isArray(parsed.endingsSeen) ? parsed.endingsSeen.filter((id): id is string => typeof id === 'string') : [],
     };
   } catch {
     return initialWorldMemory;
