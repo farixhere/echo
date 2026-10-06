@@ -21,6 +21,7 @@ import Atmosphere from './Atmosphere';
 import MemoryOrb from './MemoryOrb';
 import MysteryDoor from './MysteryDoor';
 import { getStoryProgress, getStoryState } from '../../lib/story';
+import { getEchoBehavior, getEchoEncounter, nextEchoPhase } from '../../lib/echo-encounter';
 
 const spots: Record<HotspotId, [number, number]> = {
   orb: [48, 59],
@@ -67,6 +68,8 @@ export default function EchoRoom() {
   const consequences = useMemo(() => getWorldConsequences(world), [world]);
   const story = useMemo(() => getStoryState(world), [world]);
   const storyProgress = useMemo(() => getStoryProgress(world), [world]);
+  const echoBehavior = useMemo(() => getEchoBehavior(world), [world]);
+  const encounter = useMemo(() => getEchoEncounter(world, state.echoPhase), [world, state.echoPhase]);
 
   useEffect(() => {
     setState(loadEchoState());
@@ -98,7 +101,14 @@ export default function EchoRoom() {
     return distance < 10 ? best : null;
   }, [state.playerX, state.playerY]);
 
-  const echoActive = state.discovered.length >= 2 && path.length >= 5 && !state.hasSeenEcho;
+  const echoActive = state.echoPhase !== 'dormant' && state.echoPhase !== 'resolved' && !state.hasSeenEcho;
+
+  useEffect(() => {
+    const nextPhase = nextEchoPhase(state.echoPhase, state.discovered.length, path.length, state.hasSeenEcho);
+    if (nextPhase !== state.echoPhase) {
+      setState((current) => ({ ...current, echoPhase: nextPhase }));
+    }
+  }, [path.length, state.discovered.length, state.echoPhase, state.hasSeenEcho]);
 
   useEffect(() => {
     if (!echoActive) {
@@ -108,25 +118,30 @@ export default function EchoRoom() {
 
     const timer = window.setInterval(
       () => setEchoIndex((index) => (index + 1) % path.length),
-      260,
+      Math.max(130, Math.round(260 / encounter.speed)),
     );
 
     return () => window.clearInterval(timer);
-  }, [echoActive, path.length]);
+  }, [echoActive, encounter.speed, path.length]);
 
-  const echoPosition = path[echoIndex] ?? path[0] ?? [50, 72];
+  const replayIndex = echoBehavior === 'witness' ? Math.max(0, path.length - 1 - echoIndex) : echoIndex;
+  const replayPoint = path[replayIndex] ?? path[0] ?? [50, 72];
+  const breachPoint: Point = echoBehavior === 'breach' && consequences.stoneMoved ? spots.stone : replayPoint;
+  const echoPosition: Point = state.echoPhase === 'confrontation'
+    ? [state.playerX + (breachPoint[0] - state.playerX) * 0.35, state.playerY + (breachPoint[1] - state.playerY) * 0.35]
+    : breachPoint;
   const echoNearPlayer =
     echoActive &&
-    Math.hypot(state.playerX - echoPosition[0], state.playerY - echoPosition[1]) < 7;
+    Math.hypot(state.playerX - echoPosition[0], state.playerY - echoPosition[1]) < (encounter.canApproach ? 8 : 6);
 
   useEffect(() => {
     if (!echoNearPlayer || state.hasSeenEcho) return;
 
-    setState((current) => findEcho(current));
+    setState((current) => ({ ...findEcho(current), echoPhase: 'resolved' }));
     setMessage(
       world.runs > 0
-        ? `The echo stops where your last run ended. ${story.route === 'thief' ? 'It holds out an empty hand.' : story.route === 'breach' ? 'It points toward the mark beneath the stone.' : 'It has been waiting.'}`
-        : 'You find someone standing exactly where you stood moments ago. It is not you.',
+        ? `${encounter.label} stops where your last run ended. ${story.route === 'thief' ? 'It holds out an empty hand.' : story.route === 'breach' ? 'It points toward the mark beneath the stone.' : story.route === 'witness' ? 'It turns toward the window before you do.' : 'It has been waiting.'}`
+        : `${encounter.label} stands exactly where you stood moments ago. It is not you.`,
     );
   }, [echoNearPlayer, state.hasSeenEcho, world.runs]);
 
@@ -354,6 +369,8 @@ export default function EchoRoom() {
           'room',
           state.discovered.length ? 'awakened' : '',
           echoActive ? 'echo-active' : '',
+          `echo-phase-${state.echoPhase}`,
+          `echo-behavior-${echoBehavior}`,
           consequences.orbTaken ? 'orb-missing' : '',
           consequences.windowOpened ? 'window-opened' : '',
           consequences.stoneMoved ? 'stone-moved' : '',
@@ -460,7 +477,13 @@ export default function EchoRoom() {
         <div className="hint">CLICK TO MOVE · WASD / ARROWS · EXAMINE WHEN CLOSE</div>
 
         {echoActive && !echoNearPlayer && (
-          <div className="echo-whisper">SOMETHING IS WALKING YOUR OLD PATH</div>
+          <div className="echo-whisper">{encounter.whisper}</div>
+        )}
+
+        {echoActive && (
+          <div className="echo-state" aria-live="polite">
+            {encounter.label} · {state.echoPhase.toUpperCase()}
+          </div>
         )}
 
         {consequences.memories > 0 && (
