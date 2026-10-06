@@ -457,7 +457,7 @@ export default function EchoRoom() {
           </p>
         </div>
         <button className="reset" onClick={resetRun} type="button">
-          Begin again
+          {world.newGamePlus ? 'Begin again · NG+' : 'Begin again'}
         </button>
       </header>
 
