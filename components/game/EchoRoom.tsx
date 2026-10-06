@@ -25,6 +25,7 @@ import { getEchoBehavior, getEchoEncounter, nextEchoPhase } from '../../lib/echo
 import { getEnding, type FinalChoice, type EndingState } from '../../lib/endings';
 import Soundscape from './Soundscape';
 import EnvironmentEvolution from './EnvironmentEvolution';
+import GameMenu from './GameMenu';
 
 const spots: Record<HotspotId, [number, number]> = {
   orb: [48, 59],
@@ -77,6 +78,7 @@ export default function EchoRoom() {
   const impactTimer = useRef<number | null>(null);
   const [secretHint, setSecretHint] = useState<string | null>(null);
   const [replayPanel, setReplayPanel] = useState<'none' | 'archive' | 'map' | 'changes'>('none');
+  const [menuOpen, setMenuOpen] = useState(true);
 
   const consequences = useMemo(() => getWorldConsequences(world), [world]);
   const story = useMemo(() => getStoryState(world), [world]);
@@ -375,6 +377,14 @@ export default function EchoRoom() {
     return () => window.removeEventListener('keydown', onKey);
   });
 
+  const hasProgress = world.runs > 0 || state.discovered.length > 0 || (world.endingsSeen?.length ?? 0) > 0 || Boolean(world.orbChoice || world.windowChoice || world.stoneChoice);
+
+  function startNewGame() {
+    if (hasProgress) resetRun();
+    setMenuOpen(false);
+    setReplayPanel('none');
+  }
+
   function resetRun() {
     const nextRun = world.runs + 1;
     const nextWorld = { ...world, runs: nextRun, newGamePlus: Boolean(world.endingsSeen?.length) };
@@ -444,6 +454,16 @@ export default function EchoRoom() {
 
   return (
     <main className="game-shell">
+      <GameMenu
+        open={menuOpen}
+        hasProgress={hasProgress}
+        newGamePlus={Boolean(world.newGamePlus)}
+        endingCount={endingCount}
+        memories={consequences.memories}
+        onContinue={() => setMenuOpen(false)}
+        onNewGame={startNewGame}
+        onOpenArchive={() => { setMenuOpen(false); setReplayPanel('archive'); }}
+      />
       <Soundscape scene={soundScene} moveTick={moveTick} interaction={interaction} choice={choiceSound} echoPhase={state.echoPhase} endingIndex={endingIndex} />
 
       <header className="hud">
