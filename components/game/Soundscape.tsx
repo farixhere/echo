@@ -32,6 +32,16 @@ export default function Soundscape({ scene, moveTick, interaction, choice, echoP
   const lastEcho = useRef<string>('dormant');
   const lastEnding = useRef<number | null>(null);
 
+  useEffect(() => {
+    const onAudio = (event: Event) => {
+      const next = Boolean((event as CustomEvent<boolean>).detail);
+      setEnabled(next);
+      if (next) void enableAudio();
+    };
+    window.addEventListener('echo:audio', onAudio);
+    return () => window.removeEventListener('echo:audio', onAudio);
+  }, []);
+
   useEffect(() => setEnabled(isAudioEnabled()), []);
 
   useEffect(() => {
