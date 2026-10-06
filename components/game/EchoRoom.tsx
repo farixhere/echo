@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { EchoState, HotspotId, WorldMemory } from '../../types/game';
+import type { EchoState, HotspotId, ReplayRecord, WorldMemory } from '../../types/game';
 import {
   awakenDoor,
   discover,
@@ -76,6 +76,7 @@ export default function EchoRoom() {
   const roomRef = useRef<HTMLElement | null>(null);
   const impactTimer = useRef<number | null>(null);
   const [secretHint, setSecretHint] = useState<string | null>(null);
+  const [replayPanel, setReplayPanel] = useState<'none' | 'archive' | 'map' | 'changes'>('none');
 
   const consequences = useMemo(() => getWorldConsequences(world), [world]);
   const story = useMemo(() => getStoryState(world), [world]);
@@ -375,7 +376,8 @@ export default function EchoRoom() {
   });
 
   function resetRun() {
-    const nextWorld = { ...world, runs: world.runs + 1 };
+    const nextRun = world.runs + 1;
+    const nextWorld = { ...world, runs: nextRun, newGamePlus: Boolean(world.endingsSeen?.length) };
 
     setWorld(nextWorld);
     saveWorldMemory(nextWorld);
@@ -392,7 +394,24 @@ export default function EchoRoom() {
   function chooseEnding(choice: FinalChoice) {
     const result = getEnding(world, choice);
     const seen = Array.from(new Set([...(world.endingsSeen ?? []), result.id]));
-    const nextWorld = { ...world, endingsSeen: seen, echoResolved: world.echoResolved ?? state.hasSeenEcho };
+    const record: ReplayRecord = {
+      id: `${Date.now()}-${result.id}`,
+      run: world.runs + 1,
+      endingId: result.id,
+      finalChoice: choice,
+      orbChoice: world.orbChoice,
+      windowChoice: world.windowChoice,
+      stoneChoice: world.stoneChoice,
+      memories: consequences.memories,
+      timestamp: Date.now(),
+    };
+    const nextWorld = {
+      ...world,
+      endingsSeen: seen,
+      runHistory: [...(world.runHistory ?? []), record].slice(-24),
+      newGamePlus: true,
+      echoResolved: world.echoResolved ?? state.hasSeenEcho,
+    };
     setWorld(nextWorld);
     saveWorldMemory(nextWorld);
     setFinalChoice(false);
@@ -407,6 +426,11 @@ export default function EchoRoom() {
   }), [consequences.hasCompleteSet, echoActive, state.discovered.length, state.echoPhase]);
 
   const endingIndex = ending ? ['the-release','the-keeper','the-witness','the-hunt','the-breach','the-return','the-empty-room','the-last-echo'].indexOf(ending.id) : null;
+  const endingCount = world.endingsSeen?.length ?? 0;
+  const replayCompletion = Math.round((endingCount / 8) * 100);
+  const history = [...(world.runHistory ?? [])].reverse();
+  const previousRun = history[1] ?? history[0];
+  const currentChoices = `${world.orbChoice === 'taken' ? 'T' : world.orbChoice === 'left' ? 'L' : '—'} · ${world.windowChoice === 'opened' ? 'O' : world.windowChoice === 'closed' ? 'C' : '—'} · ${world.stoneChoice === 'moved' ? 'M' : world.stoneChoice === 'kept' ? 'K' : '—'}`;
 
   const status = state.hasSeenEcho
     ? 'ECHO FOUND'
@@ -436,6 +460,82 @@ export default function EchoRoom() {
           Begin again
         </button>
       </header>
+
+
+      <section className={`replay-bar ${world.newGamePlus ? 'ng-plus' : ''}`} aria-label="Replay and ending archive">
+        <div className="replay-tabs">
+          <button className={replayPanel === 'archive' ? 'active' : ''} onClick={() => setReplayPanel(replayPanel === 'archive' ? 'none' : 'archive')} type="button">ENDINGS</button>
+          <button className={replayPanel === 'map' ? 'active' : ''} onClick={() => setReplayPanel(replayPanel === 'map' ? 'none' : 'map')} type="button">BRANCH MAP</button>
+          <button className={replayPanel === 'changes' ? 'active' : ''} onClick={() => setReplayPanel(replayPanel === 'changes' ? 'none' : 'changes')} type="button">WHAT CHANGED</button>
+        </div>
+        <div className="replay-progress"><span>{world.newGamePlus ? 'NEW GAME+' : 'FIRST RUN'}</span><b>{endingCount}/8</b><span>{replayCompletion}%</span></div>
+      </section>
+
+      {replayPanel !== 'none' && (
+        <section className="replay-panel" aria-live="polite">
+          {replayPanel === 'archive' && (
+            <>
+              <div className="replay-heading"><div><span className="eyebrow">MEMORY ARCHIVE</span><h2>Eight ways the room can remember you.</h2></div><strong>{endingCount}/8</strong></div>
+              <div className="replay-grid">
+                {(['the-release','the-keeper','the-witness','the-hunt','the-breach','the-return','the-empty-room','the-last-echo'] as string[]).map((id, index) => {
+                  const unlocked = (world.endingsSeen ?? []).includes(id);
+                  const titles = ['THE RELEASE','THE KEEPER','THE WITNESS','THE HUNT','THE BREACH','THE RETURN','THE EMPTY ROOM','THE LAST ECHO'];
+                  const clues = [
+                    'Leave after all three memories are complete.',
+                    'Stay when the room has nothing left to show.',
+                    'Follow the Echo after opening the window.',
+                    'Follow after taking the light.',
+                    'Follow after opening the window and moving the stone.',
+                    'Leave after the Echo has already been resolved.',
+                    'Reach an ending without triggering a special memory.',
+                    'Stay after a previous run has already changed the room.'
+                  ];
+                  return (
+                    <article key={id} className={`replay-card ${unlocked ? 'unlocked' : ''}`}>
+                      <span className="num">{String(index + 1).padStart(2,'0')}</span>
+                      <h3>{unlocked ? titles[index] : 'UNKNOWN MEMORY'}</h3>
+                      <p>{unlocked ? 'This ending is part of your remembered history.' : 'The room has not shown you this route yet.'}</p>
+                      <small>{unlocked ? 'UNLOCKED' : clues[index]}</small>
+                    </article>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {replayPanel === 'map' && (
+            <>
+              <div className="replay-heading"><div><span className="eyebrow">RUN HISTORY</span><h2>Every attempt leaves a branch.</h2></div><strong>{history.length} RUNS</strong></div>
+              {history.length === 0 ? (
+                <div className="replay-empty">Finish an ending and the branch map will begin recording your path.</div>
+              ) : (
+                <div className="replay-runs">
+                  {history.map((run) => (
+                    <div className="replay-run" key={run.id}>
+                      <span className="run-id">RUN {String(run.run).padStart(2,'0')}</span>
+                      <div><div className="run-title">{run.endingId.replaceAll('-', ' ').toUpperCase()}</div><div className="run-meta">{run.memories}/3 memories · {run.orbChoice ?? 'orb —'} · {run.windowChoice ?? 'window —'} · {run.stoneChoice ?? 'stone —'}</div></div>
+                      <span className="run-choice">{run.finalChoice.toUpperCase()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {replayPanel === 'changes' && (
+            <>
+              <div className="replay-heading"><div><span className="eyebrow">WHAT CHANGED</span><h2>The next run is never identical.</h2></div><strong>{world.newGamePlus ? 'NG+' : 'RUN 01'}</strong></div>
+              <div className="replay-diff">
+                <article><span>CHOICES</span><b>{currentChoices}</b><small>The three persistent choices currently shaping the room.</small></article>
+                <article><span>PREVIOUS ENDING</span><b>{previousRun ? previousRun.endingId.replaceAll('-', ' ').toUpperCase() : '—'}</b><small>{previousRun ? 'The last completed route remains in memory.' : 'Complete an ending to create replay memory.'}</small></article>
+                <article><span>ECHO</span><b>{world.echoResolved ? 'RESOLVED' : 'UNRESOLVED'}</b><small>{world.echoResolved ? 'The room has already learned how your Echo behaves.' : 'This run can still define the Echo.'}</small></article>
+                <article><span>COLLECTION</span><b>{endingCount}/8</b><small>{endingCount === 8 ? 'Every ending is remembered.' : `${8 - endingCount} ending${8-endingCount===1?'':'s'} still hidden.`}</small></article>
+              </div>
+              <div className="replay-cta"><button onClick={() => setReplayPanel('archive')} type="button">OPEN ENDING ARCHIVE</button></div>
+            </>
+          )}
+        </section>
+      )}
 
       <section className="story-card" aria-live="polite">
         <div className="story-topline">
@@ -472,6 +572,7 @@ export default function EchoRoom() {
           consequences.stoneMoved ? 'stone-moved' : '',
           consequences.hasCompleteSet ? 'memory-complete' : '',
           `route-${story.route}`,
+          world.newGamePlus ? 'ng-plus' : '',
           impact !== 'none' ? `impact-${impact}` : '',
         ].filter(Boolean).join(' ')}
         aria-label="An explorable memory room"
@@ -544,7 +645,7 @@ export default function EchoRoom() {
             <strong>{ending.title}</strong>
             <em>{ending.subtitle}</em>
             <p>{ending.narration}</p>
-            <div className="ending-footer"><span>{world.endingsSeen?.length ?? 0}/8 ENDINGS</span><button onClick={() => { setEnding(null); resetRun(); }} type="button">BEGIN AGAIN</button></div>
+            <div className="ending-footer"><span>{world.endingsSeen?.length ?? 0}/8 ENDINGS</span><button onClick={() => { setEnding(null); setReplayPanel('archive'); }} type="button">VIEW ARCHIVE</button><button onClick={() => { setEnding(null); resetRun(); }} type="button">BEGIN AGAIN</button></div>
           </div>
         )}
 
