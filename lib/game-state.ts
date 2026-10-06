@@ -42,6 +42,8 @@ export function parseWorldMemory(value: string | null): WorldMemory {
     const parsed = JSON.parse(value) as Partial<WorldMemory>;
     return {
       runs: typeof parsed.runs === 'number' ? Math.max(0, Math.floor(parsed.runs)) : 0,
+      runHistory: Array.isArray(parsed.runHistory) ? parsed.runHistory.filter((run): run is NonNullable<WorldMemory['runHistory']>[number] => Boolean(run && typeof run === 'object' && typeof (run as { id?: unknown }).id === 'string')).slice(-24) : [],
+      newGamePlus: Boolean(parsed.newGamePlus),
       orbChoice: parsed.orbChoice === 'taken' || parsed.orbChoice === 'left' ? parsed.orbChoice : undefined,
       windowChoice: parsed.windowChoice === 'opened' || parsed.windowChoice === 'closed' ? parsed.windowChoice : undefined,
       stoneChoice: parsed.stoneChoice === 'moved' || parsed.stoneChoice === 'kept' ? parsed.stoneChoice : undefined,
