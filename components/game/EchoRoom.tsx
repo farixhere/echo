@@ -24,6 +24,7 @@ import { getStoryProgress, getStoryState } from '../../lib/story';
 import { getEchoBehavior, getEchoEncounter, nextEchoPhase } from '../../lib/echo-encounter';
 import { getEnding, type FinalChoice, type EndingState } from '../../lib/endings';
 import Soundscape from './Soundscape';
+import EnvironmentEvolution from './EnvironmentEvolution';
 
 const spots: Record<HotspotId, [number, number]> = {
   orb: [48, 59],
@@ -428,6 +429,7 @@ export default function EchoRoom() {
           }
         }}
       >
+        <EnvironmentEvolution orbTaken={consequences.orbTaken} windowOpened={consequences.windowOpened} stoneMoved={consequences.stoneMoved} complete={consequences.hasCompleteSet} route={story.route} echoActive={echoActive} echoResolved={world.echoResolved === true} />
         <Atmosphere discovered={state.discovered} onMove={moveTo} />
         <MysteryDoor
           awake={state.doorAwake}
