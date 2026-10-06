@@ -10,11 +10,11 @@ type Props = {
   route: string;
   echoActive: boolean;
   echoResolved: boolean;
-  memories: number;
+  memories?: number;
   orbChoice?: 'taken' | 'left';
   windowChoice?: 'opened' | 'closed';
   stoneChoice?: 'moved' | 'kept';
-  runs: number;
+  runs?: number;
 };
 
 export default function EnvironmentEvolution({ orbTaken, windowOpened, stoneMoved, complete, route, echoActive, echoResolved, memories, orbChoice, windowChoice, stoneChoice, runs }: Props) {
