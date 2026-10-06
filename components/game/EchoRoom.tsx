@@ -22,6 +22,7 @@ import MemoryOrb from './MemoryOrb';
 import MysteryDoor from './MysteryDoor';
 import { getStoryProgress, getStoryState } from '../../lib/story';
 import { getEchoBehavior, getEchoEncounter, nextEchoPhase } from '../../lib/echo-encounter';
+import { getEnding, type FinalChoice, type EndingState } from '../../lib/endings';
 
 const spots: Record<HotspotId, [number, number]> = {
   orb: [48, 59],
@@ -64,6 +65,8 @@ export default function EchoRoom() {
   const [hydrated, setHydrated] = useState(false);
   const [path, setPath] = useState<Point[]>([[50, 72]]);
   const [echoIndex, setEchoIndex] = useState(0);
+  const [finalChoice, setFinalChoice] = useState(false);
+  const [ending, setEnding] = useState<EndingState | null>(null);
 
   const consequences = useMemo(() => getWorldConsequences(world), [world]);
   const story = useMemo(() => getStoryState(world), [world]);
@@ -138,6 +141,7 @@ export default function EchoRoom() {
     if (!echoNearPlayer || state.hasSeenEcho) return;
 
     setState((current) => ({ ...findEcho(current), echoPhase: 'resolved' }));
+    setWorld((current) => ({ ...current, echoResolved: true }));
     setMessage(
       world.runs > 0
         ? `${encounter.label} stops where your last run ended. ${story.route === 'thief' ? 'It holds out an empty hand.' : story.route === 'breach' ? 'It points toward the mark beneath the stone.' : story.route === 'witness' ? 'It turns toward the window before you do.' : 'It has been waiting.'}`
@@ -253,6 +257,12 @@ export default function EchoRoom() {
     }
 
     if (nearest === 'door' && state.doorAwake) {
+      if (consequences.hasCompleteSet && !ending) {
+        setFinalChoice(true);
+        setMessage('The door opens onto the memory beneath every choice. It asks what you will do with it.');
+        return;
+      }
+
       setState(findEcho);
       setMessage(
         story.stage === 'the-revelation'
@@ -323,8 +333,21 @@ export default function EchoRoom() {
     setPath([[50, 72]]);
     setEchoIndex(0);
     setChoiceTarget(null);
+    setFinalChoice(false);
+    setEnding(null);
     setMessage('The room forgets your body. It does not forget your choices.');
     clearEchoState();
+  }
+
+  function chooseEnding(choice: FinalChoice) {
+    const result = getEnding(world, choice);
+    const seen = Array.from(new Set([...(world.endingsSeen ?? []), result.id]));
+    const nextWorld = { ...world, endingsSeen: seen, echoResolved: world.echoResolved ?? state.hasSeenEcho };
+    setWorld(nextWorld);
+    saveWorldMemory(nextWorld);
+    setFinalChoice(false);
+    setEnding(result);
+    setMessage(result.consequence);
   }
 
   const status = state.hasSeenEcho
@@ -425,7 +448,30 @@ export default function EchoRoom() {
 
         {state.hasSeenEcho && <div className="echo-trace" aria-hidden="true" />}
 
-        {choiceTarget && (
+        {finalChoice && (
+          <div className="ending-choice-card" role="dialog" aria-label="Choose the fate of the memory">
+            <span className="choice-kicker">THE FINAL MEMORY</span>
+            <strong>WHAT WILL YOU DO WITH IT?</strong>
+            <p>The room can finally let you go. The Echo cannot decide for you.</p>
+            <div className="choice-actions ending-actions">
+              <button onClick={() => chooseEnding('leave')}>LEAVE IT BEHIND</button>
+              <button onClick={() => chooseEnding('stay')}>STAY WITH IT</button>
+              <button onClick={() => chooseEnding('follow')}>FOLLOW THE ECHO</button>
+            </div>
+          </div>
+        )}
+
+        {ending && (
+          <div className="ending-card" role="dialog" aria-label="Ending revealed">
+            <span className="ending-kicker">ENDING DISCOVERED · {ending.id.replaceAll('-', ' ').toUpperCase()}</span>
+            <strong>{ending.title}</strong>
+            <em>{ending.subtitle}</em>
+            <p>{ending.narration}</p>
+            <div className="ending-footer"><span>{world.endingsSeen?.length ?? 0}/8 ENDINGS</span><button onClick={() => { setEnding(null); resetRun(); }} type="button">BEGIN AGAIN</button></div>
+          </div>
+        )}
+
+        {choiceTarget && !finalChoice && (
           <div className="choice-card" role="dialog" aria-label="A memory choice">
             <span className="choice-kicker">THE ROOM WILL REMEMBER THIS</span>
             <strong>
