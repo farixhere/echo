@@ -31,3 +31,23 @@
 /* Story chapter + branch identity */
 .story-title-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-top:7px}.story-title-row strong{font-size:15px;letter-spacing:-.02em;color:#eef7fb}.story-title-row span{flex:none;color:#526675;font-size:7px;letter-spacing:.18em}.route-thief .story-card{border-color:rgba(230,190,145,.18)}.route-witness .story-card{border-color:rgba(145,220,240,.2)}.route-breach .story-card{border-color:rgba(195,165,245,.2)}.route-keeper .story-card{border-color:rgba(180,205,215,.16)}
 @media(max-width:600px){.story-title-row strong{font-size:13px}.story-title-row span{font-size:6px}}
+
+
+/* Advanced Echo encounter layer */
+.echo-state{position:absolute;z-index:8;left:18px;top:16px;padding:7px 9px;border:1px solid rgba(155,226,255,.13);border-radius:999px;background:rgba(5,9,13,.48);color:rgba(190,231,244,.5);font-size:7px;letter-spacing:.16em;pointer-events:none;backdrop-filter:blur(6px)}
+.echo-phase-glimpse .echo-figure{opacity:.38;filter:blur(1.2px)}
+.echo-phase-stalking .echo-figure{opacity:.72;filter:blur(.35px)}
+.echo-phase-confrontation .echo-figure{opacity:1;filter:blur(0);width:24px;height:34px}
+.echo-phase-confrontation .echo-figure.confronting{animation:echoConfront .9s ease-in-out infinite}
+.echo-behavior-hunter .echo-figure{border-color:rgba(255,210,165,.5);box-shadow:0 0 35px rgba(230,175,120,.18)}
+.echo-behavior-witness .echo-figure{border-color:rgba(150,220,240,.4);opacity:.5}
+.echo-behavior-keeper .echo-figure{border-color:rgba(185,215,205,.35);opacity:.42}
+.echo-behavior-breach .echo-figure{border-color:rgba(205,170,255,.52);box-shadow:0 0 40px rgba(180,130,245,.2)}
+.echo-behavior-breach{background:radial-gradient(circle at 25% 28%,rgba(180,130,245,.08),transparent 20%),radial-gradient(circle at 50% 48%,rgba(105,195,238,.1),transparent 34%),linear-gradient(145deg,#080b10,#0c151d 55%,#06080c)}
+.echo-behavior-hunter .echo-whisper{color:rgba(255,218,180,.65)}
+.echo-behavior-witness .echo-whisper{color:rgba(175,225,240,.55)}
+.echo-behavior-breach .echo-whisper{color:rgba(210,185,255,.62)}
+.echo-behavior-keeper .echo-whisper{color:rgba(195,220,210,.52)}
+@keyframes echoConfront{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.12)}}
+@media(max-width:600px){.echo-state{top:12px;left:12px;font-size:6px}.echo-phase-confrontation .echo-figure{width:21px;height:31px}}
+@media(prefers-reduced-motion:reduce){.echo-phase-confrontation .echo-figure{animation:none}.echo-state{backdrop-filter:none}}
