@@ -75,6 +75,7 @@ export default function EchoRoom() {
   const [impact, setImpact] = useState<'none' | 'soft' | 'strong'>('none');
   const roomRef = useRef<HTMLElement | null>(null);
   const impactTimer = useRef<number | null>(null);
+  const [secretHint, setSecretHint] = useState<string | null>(null);
 
   const consequences = useMemo(() => getWorldConsequences(world), [world]);
   const story = useMemo(() => getStoryState(world), [world]);
@@ -187,6 +188,34 @@ export default function EchoRoom() {
     moveTo(state.playerX + dx, state.playerY + dy);
   }
 
+  const secretsFound = world.secretsFound ?? [];
+  const secretFlags = world.secretFlags ?? [];
+
+  function revealSecret(id: string, text: string) {
+    if (secretsFound.includes(id)) return;
+    const nextWorld = {
+      ...world,
+      secretsFound: [...secretsFound, id],
+      secretFlags: { ...world.secretFlags, [id]: true },
+    };
+    setWorld(nextWorld);
+    saveWorldMemory(nextWorld);
+    setSecretHint(text);
+    triggerImpact('strong');
+  }
+
+  function checkSecrets(id: HotspotId) {
+    if (id === 'stone' && consequences.stoneMoved && world.runs > 0) {
+      revealSecret('second-fingerprint', 'SECRET MEMORY · The second fingerprint belongs to the person who left the first echo.');
+    } else if (id === 'window' && consequences.windowOpened && consequences.orbTaken) {
+      revealSecret('mirror-run', 'SECRET MEMORY · The glass is showing another run. Someone is still inside it.');
+    } else if (id === 'orb' && world.orbChoice === 'left' && world.runs > 0) {
+      revealSecret('orb-whisper', 'SECRET MEMORY · The light remembers every hand that refused to take it.');
+    } else if (id === 'door' && consequences.hasCompleteSet && state.hasSeenEcho) {
+      revealSecret('echo-name', 'SECRET MEMORY · The Echo is not a creature. It is the room remembering a missing person.');
+    }
+  }
+
   function inspectMessage(id: HotspotId): string {
     if (id === 'orb') {
       if (consequences.orbTaken && consequences.windowOpened) {
@@ -251,6 +280,7 @@ export default function EchoRoom() {
   function interact() {
     if (!nearest) return;
     setInteraction({ kind: nearest, token: performance.now() });
+    checkSecrets(nearest);
     triggerImpact(nearest === 'door' ? 'strong' : 'soft');
 
     if (nearest === 'door' && !state.doorAwake) {
@@ -456,6 +486,7 @@ export default function EchoRoom() {
         }}
       >
         <div className="game-gesture" aria-hidden="true" />
+        {secretHint && <button className="secret-discovery" onClick={() => setSecretHint(null)} type="button"><span>DISCOVERY FOUND</span><strong>{secretHint}</strong><em>TAP TO CONTINUE</em></button>}
         <EnvironmentEvolution orbTaken={consequences.orbTaken} windowOpened={consequences.windowOpened} stoneMoved={consequences.stoneMoved} complete={consequences.hasCompleteSet} route={story.route} echoActive={echoActive} echoResolved={world.echoResolved === true} />
         <Atmosphere discovered={state.discovered} onMove={moveTo} />
         <MysteryDoor
@@ -582,6 +613,8 @@ export default function EchoRoom() {
             {encounter.label} · {state.echoPhase.toUpperCase()}
           </div>
         )}
+
+        {secretsFound.length > 0 && <div className="secret-counter">{secretsFound.length}/4 SECRETS</div>}
 
         {consequences.memories > 0 && (
           <div className="memory-counter" aria-label={`${consequences.memories} persistent choices`}>
