@@ -476,9 +476,12 @@ export default function EchoRoom() {
               : 'Nothing here tells you what to do.'}
           </p>
         </div>
-        <button className="reset" onClick={resetRun} type="button">
-          {world.newGamePlus ? 'Begin again · NG+' : 'Begin again'}
-        </button>
+        <div className="hud-actions">
+          <button className="menu-trigger" onClick={() => setMenuOpen(true)} type="button" aria-label="Open ECHO menu">MENU</button>
+          <button className="reset" onClick={resetRun} type="button">
+            {world.newGamePlus ? 'Begin again · NG+' : 'Begin again'}
+          </button>
+        </div>
       </header>
 
 
