@@ -51,3 +51,18 @@ The replay layer is now complete. ECHO remembers not only what happened inside a
 - Mobile-friendly archive UI and reduced-motion support
 
 No backend is required; replay memory remains local to the player's browser.
+
+
+## Stage 14 — Final Release Polish
+
+ECHO is release-ready on the production deployment.
+
+- Production metadata, canonical URL and OpenGraph/Twitter description
+- Browser/app icon and installable web manifest
+- Robots policy for the public game route
+- Dedicated 404 recovery screen
+- Runtime error boundary with safe retry/reload actions
+- Mobile viewport configuration and dark theme hints
+- No runtime errors observed in the latest 7-day production scan
+
+**Production:** https://echo-dupekingsam-7855.vercel.app
