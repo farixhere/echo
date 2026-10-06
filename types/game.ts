@@ -15,6 +15,7 @@ export type EchoState = {
   discovered: HotspotId[];
   doorAwake: boolean;
   hasSeenEcho: boolean;
+  echoPhase: import('../lib/echo-encounter').EchoEncounterPhase;
 };
 
 export type ChoiceTarget = Exclude<HotspotId, 'door'> | null;
