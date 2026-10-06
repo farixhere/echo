@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { EchoState, HotspotId, WorldMemory } from '../../types/game';
 import {
   awakenDoor,
@@ -72,6 +72,9 @@ export default function EchoRoom() {
   const [moveTick, setMoveTick] = useState(0);
   const [interaction, setInteraction] = useState<{ kind: HotspotId; token: number } | undefined>();
   const [choiceSound, setChoiceSound] = useState<{ kind: 'orb' | 'window' | 'stone'; positive: boolean; token: number } | undefined>();
+  const [impact, setImpact] = useState<'none' | 'soft' | 'strong'>('none');
+  const roomRef = useRef<HTMLElement | null>(null);
+  const impactTimer = useRef<number | null>(null);
 
   const consequences = useMemo(() => getWorldConsequences(world), [world]);
   const story = useMemo(() => getStoryState(world), [world]);
@@ -154,6 +157,12 @@ export default function EchoRoom() {
     );
   }, [echoNearPlayer, state.hasSeenEcho, world.runs]);
 
+  function triggerImpact(kind: 'soft' | 'strong' = 'soft') {
+    setImpact(kind);
+    if (impactTimer.current) window.clearTimeout(impactTimer.current);
+    impactTimer.current = window.setTimeout(() => setImpact('none'), kind === 'strong' ? 360 : 220);
+  }
+
   function rememberStep(x: number, y: number) {
     setPath((previous) => {
       const last = previous[previous.length - 1];
@@ -168,6 +177,7 @@ export default function EchoRoom() {
 
     rememberStep(nextX, nextY);
     setMoveTick((tick) => tick + 1);
+    triggerImpact('soft');
     setState((current) => ({ ...current, playerX: nextX, playerY: nextY }));
     setMessage('');
     setChoiceTarget(null);
@@ -241,6 +251,7 @@ export default function EchoRoom() {
   function interact() {
     if (!nearest) return;
     setInteraction({ kind: nearest, token: performance.now() });
+    triggerImpact(nearest === 'door' ? 'strong' : 'soft');
 
     if (nearest === 'door' && !state.doorAwake) {
       if (!state.discovered.includes('orb')) {
@@ -312,6 +323,7 @@ export default function EchoRoom() {
 
     setWorld(nextWorld);
     setChoiceSound({ kind: choiceTarget, positive: choice.endsWith('taken') || choice.endsWith('opened') || choice.endsWith('moved'), token: performance.now() });
+    triggerImpact('strong');
     setState((current) => discover(current, choiceTarget));
     setChoiceTarget(null);
     setMessage(`${choiceCopy[choice]} ${getStoryState(nextWorld).clue}`);
@@ -406,6 +418,19 @@ export default function EchoRoom() {
       </section>
 
       <section
+        ref={roomRef}
+        onPointerMove={(event) => {
+          if (event.pointerType === 'touch') return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+          const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+          event.currentTarget.style.setProperty('--camera-x', (x * 2.8).toFixed(2) + 'deg');
+          event.currentTarget.style.setProperty('--camera-y', (y * -2).toFixed(2) + 'deg');
+        }}
+        onPointerLeave={(event) => {
+          event.currentTarget.style.setProperty('--camera-x', '0deg');
+          event.currentTarget.style.setProperty('--camera-y', '0deg');
+        }}
         className={[
           'room',
           state.discovered.length ? 'awakened' : '',
@@ -417,6 +442,7 @@ export default function EchoRoom() {
           consequences.stoneMoved ? 'stone-moved' : '',
           consequences.hasCompleteSet ? 'memory-complete' : '',
           `route-${story.route}`,
+          impact !== 'none' ? `impact-${impact}` : '',
         ].filter(Boolean).join(' ')}
         aria-label="An explorable memory room"
         onClick={(event) => {
@@ -429,6 +455,7 @@ export default function EchoRoom() {
           }
         }}
       >
+        <div className="game-gesture" aria-hidden="true" />
         <EnvironmentEvolution orbTaken={consequences.orbTaken} windowOpened={consequences.windowOpened} stoneMoved={consequences.stoneMoved} complete={consequences.hasCompleteSet} route={story.route} echoActive={echoActive} echoResolved={world.echoResolved === true} />
         <Atmosphere discovered={state.discovered} onMove={moveTo} />
         <MysteryDoor
@@ -540,6 +567,11 @@ export default function EchoRoom() {
         )}
 
         <div className="hint">CLICK TO MOVE · WASD / ARROWS · EXAMINE WHEN CLOSE</div>
+        <div className="mobile-controls" aria-label="Mobile movement controls">
+          <button onClick={() => moveBy(0, -3)} aria-label="Move up">↑</button>
+          <div><button onClick={() => moveBy(-3, 0)} aria-label="Move left">←</button><button onClick={() => interact()} aria-label="Interact">✦</button><button onClick={() => moveBy(3, 0)} aria-label="Move right">→</button></div>
+          <button onClick={() => moveBy(0, 3)} aria-label="Move down">↓</button>
+        </div>
 
         {echoActive && !echoNearPlayer && (
           <div className="echo-whisper">{encounter.whisper}</div>
