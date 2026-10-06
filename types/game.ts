@@ -6,6 +6,8 @@ export type WorldMemory = {
   orbChoice?: 'taken' | 'left';
   windowChoice?: 'opened' | 'closed';
   stoneChoice?: 'moved' | 'kept';
+  echoResolved?: boolean;
+  endingsSeen?: string[];
 };
 
 export type EchoState = {
