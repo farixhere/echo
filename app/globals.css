@@ -218,3 +218,8 @@
   .room,.room .player,.room .echo-figure,.room .interact{transition:none}
   .room.impact-soft,.room.impact-strong,.room .echo-whisper,.room .memory-path i,.ending-choice-card,.choice-card,.ending-card{animation:none}
 }
+
+.secret-discovery{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:50;width:min(430px,calc(100% - 28px));padding:22px;border:1px solid rgba(154,216,240,.28);border-radius:14px;background:rgba(6,10,15,.94);backdrop-filter:blur(16px);color:#cfe5ef;box-shadow:0 18px 70px rgba(0,0,0,.55),0 0 45px rgba(100,190,225,.08);cursor:pointer;text-align:left;animation:secretReveal .55s cubic-bezier(.16,1,.3,1)}
+.secret-discovery span{display:block;font-size:8px;letter-spacing:.22em;color:#79b9d2;margin-bottom:9px}.secret-discovery strong{display:block;font-size:15px;font-weight:500;line-height:1.5}.secret-discovery em{display:block;margin-top:18px;font-size:8px;font-style:normal;letter-spacing:.14em;color:#536a78}.secret-counter{position:absolute;right:16px;bottom:14px;z-index:22;font-size:8px;letter-spacing:.14em;color:#7895a4;pointer-events:none}
+@keyframes secretReveal{0%{opacity:0;transform:translate(-50%,-50%) scale(.9);filter:blur(5px)}55%{opacity:1;transform:translate(-50%,-50%) scale(1.02);filter:blur(0)}100%{transform:translate(-50%,-50%) scale(1)}}
+@media(max-width:700px){.secret-discovery{top:42%;padding:19px}.secret-counter{bottom:98px;right:12px}}@media(prefers-reduced-motion:reduce){.secret-discovery{animation:none}}
