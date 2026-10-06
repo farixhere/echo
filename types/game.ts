@@ -8,6 +8,8 @@ export type WorldMemory = {
   stoneChoice?: 'moved' | 'kept';
   echoResolved?: boolean;
   endingsSeen?: string[];
+  secretsFound?: string[];
+  secretFlags?: Record<string, boolean>;
 };
 
 export type EchoState = {
