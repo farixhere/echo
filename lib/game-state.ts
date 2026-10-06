@@ -1,4 +1,5 @@
 import type { EchoState, HotspotId, WorldConsequence, WorldMemory } from '../types/game';
+import type { EchoEncounterPhase } from './echo-encounter';
 
 export const initialEchoState: EchoState = {
   playerX: 50,
@@ -7,6 +8,7 @@ export const initialEchoState: EchoState = {
   discovered: [],
   doorAwake: false,
   hasSeenEcho: false,
+  echoPhase: 'dormant',
 };
 
 export const initialWorldMemory: WorldMemory = { runs: 0 };
@@ -25,6 +27,9 @@ export function parseEchoState(value: string | null): EchoState {
         : [],
       doorAwake: Boolean(parsed.doorAwake),
       hasSeenEcho: Boolean(parsed.hasSeenEcho),
+      echoPhase: (['dormant', 'glimpse', 'stalking', 'confrontation', 'resolved'] as EchoEncounterPhase[]).includes(parsed.echoPhase as EchoEncounterPhase)
+        ? parsed.echoPhase as EchoEncounterPhase
+        : 'dormant',
     };
   } catch {
     return initialEchoState;
