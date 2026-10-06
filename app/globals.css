@@ -69,3 +69,13 @@
 @keyframes endingReveal{from{opacity:0;transform:translate(-50%,-46%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 @media(max-width:600px){.ending-choice-card,.ending-card{padding:18px;border-radius:13px}.ending-choice-card strong,.ending-card strong{font-size:17px}.ending-card strong{font-size:24px}.ending-actions{grid-template-columns:1fr}.ending-actions button{min-height:40px}.ending-footer{font-size:7px}}
 @media(prefers-reduced-motion:reduce){.ending-card{animation:none}}
+
+/* Soundscape layer */
+.sound-start,.sound-toggle{position:fixed;z-index:50;border:1px solid rgba(155,226,255,.18);background:rgba(5,9,13,.78);color:#a8c4d0;border-radius:999px;backdrop-filter:blur(12px);font-size:8px;letter-spacing:.15em;cursor:pointer;box-shadow:0 10px 35px rgba(0,0,0,.2)}
+.sound-start{left:18px;bottom:18px;padding:10px 13px;color:#d8f5ff;border-color:rgba(155,226,255,.35);animation:soundPulse 2.8s ease-in-out infinite}
+.sound-start span{opacity:.45;margin-left:8px}
+.sound-toggle{right:18px;top:18px;padding:8px 10px;color:rgba(205,225,234,.58)}
+.sound-toggle:hover,.sound-start:hover{border-color:rgba(155,226,255,.5);color:#e6f9ff}
+@keyframes soundPulse{0%,100%{box-shadow:0 10px 35px rgba(0,0,0,.2),0 0 0 rgba(155,226,255,0)}50%{box-shadow:0 10px 35px rgba(0,0,0,.2),0 0 22px rgba(155,226,255,.09)}}
+@media(max-width:600px){.sound-toggle{right:10px;top:10px;font-size:7px;padding:7px 8px}.sound-start{left:10px;bottom:10px;font-size:7px;padding:9px 11px}}
+@media(prefers-reduced-motion:reduce){.sound-start{animation:none}.sound-start,.sound-toggle{backdrop-filter:none}}
