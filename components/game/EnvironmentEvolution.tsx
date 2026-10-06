@@ -20,11 +20,13 @@ type Props = {
 export default function EnvironmentEvolution({ orbTaken, windowOpened, stoneMoved, complete, route, echoActive, echoResolved, memories, orbChoice, windowChoice, stoneChoice, runs }: Props) {
   const rain = Array.from({ length: 18 }, (_, i) => i);
   const dust = Array.from({ length: 10 }, (_, i) => i);
-  const instability = Math.min(1, memories / 3 + (runs > 0 ? 0.12 : 0));
+  const memoryLevel = memories || 0;
+  const runLevel = runs || 0;
+  const instability = Math.min(1, memoryLevel / 3 + (runLevel > 0 ? 0.12 : 0));
   const style = { '--instability': instability } as CSSProperties;
 
   return (
-    <div className={['environment-evolution',`memory-stage-${memories}`,complete?'environment-final':'',echoActive?'environment-echo':'',echoResolved?'environment-echo-resolved':'',orbTaken?'environment-orb-taken':'',windowOpened?'environment-window-open':'',stoneMoved?'environment-stone-moved':'',orbChoice==='left'?'environment-orb-left':'',windowChoice==='closed'?'environment-window-closed':'',stoneChoice==='kept'?'environment-stone-kept':'',`environment-route-${route}`,runs>0?'environment-revisited':''].filter(Boolean).join(' ')} style={style} aria-hidden="true">
+    <div className={['environment-evolution',`memory-stage-${memoryLevel}`,complete?'environment-final':'',echoActive?'environment-echo':'',echoResolved?'environment-echo-resolved':'',orbTaken?'environment-orb-taken':'',windowOpened?'environment-window-open':'',stoneMoved?'environment-stone-moved':'',orbChoice==='left'?'environment-orb-left':'',windowChoice==='closed'?'environment-window-closed':'',stoneChoice==='kept'?'environment-stone-kept':'',`environment-route-${route}`,runs>0?'environment-revisited':''].filter(Boolean).join(' ')} style={style} aria-hidden="true">
       <div className="environment-ceiling" /><div className="ceiling-light" />
       <div className="ceiling-fissure fissure-a" /><div className="ceiling-fissure fissure-b" />
       <div className="wall-plane wall-left" /><div className="wall-plane wall-right" />
