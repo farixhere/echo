@@ -1,8 +1,22 @@
 export type HotspotId = 'orb' | 'door' | 'window' | 'stone';
 export type MemoryChoice = 'taken' | 'left' | 'opened' | 'closed' | 'moved' | 'kept';
 
+export type ReplayRecord = {
+  id: string;
+  run: number;
+  endingId: string;
+  finalChoice: 'leave' | 'stay' | 'follow';
+  orbChoice?: 'taken' | 'left';
+  windowChoice?: 'opened' | 'closed';
+  stoneChoice?: 'moved' | 'kept';
+  memories: number;
+  timestamp: number;
+};
+
 export type WorldMemory = {
   runs: number;
+  runHistory?: ReplayRecord[];
+  newGamePlus?: boolean;
   orbChoice?: 'taken' | 'left';
   windowChoice?: 'opened' | 'closed';
   stoneChoice?: 'moved' | 'kept';
