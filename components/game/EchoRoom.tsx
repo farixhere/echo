@@ -23,6 +23,7 @@ import MysteryDoor from './MysteryDoor';
 import { getStoryProgress, getStoryState } from '../../lib/story';
 import { getEchoBehavior, getEchoEncounter, nextEchoPhase } from '../../lib/echo-encounter';
 import { getEnding, type FinalChoice, type EndingState } from '../../lib/endings';
+import Soundscape from './Soundscape';
 
 const spots: Record<HotspotId, [number, number]> = {
   orb: [48, 59],
@@ -67,6 +68,9 @@ export default function EchoRoom() {
   const [echoIndex, setEchoIndex] = useState(0);
   const [finalChoice, setFinalChoice] = useState(false);
   const [ending, setEnding] = useState<EndingState | null>(null);
+  const [moveTick, setMoveTick] = useState(0);
+  const [interaction, setInteraction] = useState<{ kind: HotspotId; token: number } | undefined>();
+  const [choiceSound, setChoiceSound] = useState<{ kind: 'orb' | 'window' | 'stone'; positive: boolean; token: number } | undefined>();
 
   const consequences = useMemo(() => getWorldConsequences(world), [world]);
   const story = useMemo(() => getStoryState(world), [world]);
@@ -162,6 +166,7 @@ export default function EchoRoom() {
     const nextY = Math.min(90, Math.max(12, y));
 
     rememberStep(nextX, nextY);
+    setMoveTick((tick) => tick + 1);
     setState((current) => ({ ...current, playerX: nextX, playerY: nextY }));
     setMessage('');
     setChoiceTarget(null);
@@ -234,6 +239,7 @@ export default function EchoRoom() {
 
   function interact() {
     if (!nearest) return;
+    setInteraction({ kind: nearest, token: performance.now() });
 
     if (nearest === 'door' && !state.doorAwake) {
       if (!state.discovered.includes('orb')) {
@@ -304,6 +310,7 @@ export default function EchoRoom() {
     }
 
     setWorld(nextWorld);
+    setChoiceSound({ kind: choiceTarget, positive: choice.endsWith('taken') || choice.endsWith('opened') || choice.endsWith('moved'), token: performance.now() });
     setState((current) => discover(current, choiceTarget));
     setChoiceTarget(null);
     setMessage(`${choiceCopy[choice]} ${getStoryState(nextWorld).clue}`);
@@ -350,6 +357,14 @@ export default function EchoRoom() {
     setMessage(result.consequence);
   }
 
+  const soundScene = useMemo(() => ({
+    intensity: Math.min(1, state.discovered.length / 4 + (consequences.hasCompleteSet ? 0.18 : 0)),
+    echoDanger: echoActive ? (state.echoPhase === 'confrontation' ? 1 : state.echoPhase === 'stalking' ? 0.72 : 0.34) : 0,
+    memoryComplete: consequences.hasCompleteSet,
+  }), [consequences.hasCompleteSet, echoActive, state.discovered.length, state.echoPhase]);
+
+  const endingIndex = ending ? ['the-release','the-keeper','the-witness','the-hunt','the-breach','the-return','the-empty-room','the-last-echo'].indexOf(ending.id) : null;
+
   const status = state.hasSeenEcho
     ? 'ECHO FOUND'
     : echoActive
@@ -362,6 +377,8 @@ export default function EchoRoom() {
 
   return (
     <main className="game-shell">
+      <Soundscape scene={soundScene} moveTick={moveTick} interaction={interaction} choice={choiceSound} echoPhase={state.echoPhase} endingIndex={endingIndex} />
+
       <header className="hud">
         <div>
           <span className="eyebrow">PROJECT 03 · MEMORY 01</span>
