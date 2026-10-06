@@ -47,6 +47,8 @@ export function parseWorldMemory(value: string | null): WorldMemory {
       stoneChoice: parsed.stoneChoice === 'moved' || parsed.stoneChoice === 'kept' ? parsed.stoneChoice : undefined,
       echoResolved: Boolean(parsed.echoResolved),
       endingsSeen: Array.isArray(parsed.endingsSeen) ? parsed.endingsSeen.filter((id): id is string => typeof id === 'string') : [],
+      secretsFound: Array.isArray(parsed.secretsFound) ? parsed.secretsFound.filter((id): id is string => typeof id === 'string') : [],
+      secretFlags: parsed.secretFlags && typeof parsed.secretFlags === 'object' ? parsed.secretFlags as Record<string, boolean> : {},
     };
   } catch {
     return initialWorldMemory;
