@@ -117,3 +117,104 @@
 @keyframes resonance{0%,100%{transform:scale(.97);opacity:.2}50%{transform:scale(1.02);opacity:.55}}
 @media(max-width:600px){.wall-crack{width:100px;height:60px}.rain-field i{height:55px}.memory-resonance{inset:11%}}
 @media(prefers-reduced-motion:reduce){.rain-field i,.memory-resonance{animation:none}.rain-field{opacity:.3}.memory-resonance{opacity:.3}}
+
+
+/* Stage 8 — game feel: responsive feedback, tactile motion, proximity, touch controls */
+.room{
+  --camera-x:0deg;
+  --camera-y:0deg;
+  transform:perspective(1200px) rotateX(var(--camera-y)) rotateY(var(--camera-x));
+  transition:transform .16s ease-out,filter .45s ease,box-shadow .55s ease;
+  touch-action:manipulation;
+}
+.room button{touch-action:manipulation}
+.room .game-gesture{
+  position:absolute;inset:0;pointer-events:none;z-index:18;
+  background:radial-gradient(circle at var(--pointer-x,50%) var(--pointer-y,50%),rgba(255,255,255,.035),transparent 22%);
+  opacity:.35;transition:opacity .25s;
+}
+.room:has(.player.near) .game-gesture{opacity:.55}
+.room.impact-soft{animation:echoSoftImpact .22s ease-out}
+.room.impact-strong{animation:echoStrongImpact .36s ease-out}
+.room .player{
+  width:15px;height:15px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff 0 7%,#9edfff 15%,#5b98b8 34%,transparent 68%);
+  box-shadow:0 0 18px rgba(143,214,255,.45),0 0 0 1px rgba(190,235,255,.12);
+  transform:translate(-50%,-50%) scale(1);
+  transition:left .16s ease-out,top .16s ease-out,transform .18s ease,filter .18s ease;
+  z-index:14;pointer-events:none;
+}
+.room .player.near{transform:translate(-50%,-50%) scale(1.35);filter:brightness(1.25)}
+.room .interact{
+  position:absolute;left:50%;bottom:44px;transform:translateX(-50%);
+  z-index:31;border:1px solid rgba(143,214,255,.28);border-radius:999px;
+  background:rgba(7,11,16,.88);backdrop-filter:blur(10px);
+  padding:10px 14px;color:#d7eaf5;font-size:10px;letter-spacing:.1em;
+  box-shadow:0 8px 30px rgba(0,0,0,.3);cursor:pointer;
+  animation:interactIn .2s ease-out;
+}
+.room .interact span{margin-left:10px;color:#718596;border-left:1px solid #334454;padding-left:10px}
+.room .interact:hover,.room .interact:focus-visible{border-color:var(--accent);transform:translateX(-50%) translateY(-2px)}
+.room .hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:21;white-space:nowrap;color:#596878;font-size:9px;letter-spacing:.1em;pointer-events:none}
+.room .memory-path i{
+  position:absolute;width:4px;height:4px;border-radius:50%;background:#87c8e5;
+  opacity:.14;transform:translate(-50%,-50%);box-shadow:0 0 7px rgba(143,214,255,.2);
+  animation:pathFlicker 2.4s ease-in-out infinite;
+}
+.room .echo-figure{
+  width:24px;height:24px;border-radius:50%;position:absolute;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,#d8f4ff 0 5%,rgba(143,214,255,.6) 16%,rgba(143,214,255,.12) 42%,transparent 70%);
+  box-shadow:0 0 24px rgba(143,214,255,.2);
+  transition:left .22s ease-out,top .22s ease-out,filter .2s,transform .2s;
+  z-index:13;pointer-events:none;filter:blur(.2px);
+}
+.room .echo-figure:after{
+  content:"";position:absolute;inset:9px 5px -7px;border-radius:50%;
+  background:linear-gradient(180deg,rgba(143,214,255,.18),transparent);
+  filter:blur(5px);
+}
+.room .echo-figure.close{transform:translate(-50%,-50%) scale(1.35);filter:brightness(1.35)}
+.room .echo-whisper{
+  position:absolute;left:50%;top:9%;transform:translateX(-50%);
+  z-index:22;color:rgba(173,214,233,.5);font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;pointer-events:none;animation:whisper 2.8s ease-in-out infinite;
+}
+.room .echo-state,.room .memory-counter{
+  position:absolute;z-index:22;top:14px;color:#627687;font-size:8px;letter-spacing:.14em;
+  pointer-events:none;
+}
+.room .echo-state{right:16px}
+.room .memory-counter{left:16px}
+.mobile-controls{display:none;position:absolute;right:12px;bottom:12px;z-index:32;gap:2px;flex-direction:column;align-items:center}
+.mobile-controls>div{display:flex;gap:2px}
+.mobile-controls button{
+  width:42px;height:38px;border:1px solid rgba(143,214,255,.16);border-radius:10px;
+  background:rgba(7,11,16,.75);color:#9fb2c1;font-size:17px;line-height:1;
+  backdrop-filter:blur(8px);cursor:pointer;
+}
+.mobile-controls button:active{transform:scale(.92);background:rgba(143,214,255,.1)}
+.ending-choice-card,.choice-card,.ending-card{
+  animation:cardIn .32s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes echoSoftImpact{0%{filter:brightness(1)}45%{filter:brightness(1.09)}100%{filter:brightness(1)}}
+@keyframes echoStrongImpact{0%,100%{transform:perspective(1200px) rotateX(var(--camera-y)) rotateY(var(--camera-x)) translate3d(0,0,0)}18%{transform:perspective(1200px) rotateX(var(--camera-y)) rotateY(var(--camera-x)) translate3d(-3px,1px,0)}36%{transform:perspective(1200px) rotateX(var(--camera-y)) rotateY(var(--camera-x)) translate3d(3px,-1px,0)}54%{transform:perspective(1200px) rotateX(var(--camera-y)) rotateY(var(--camera-x)) translate3d(-2px,0,0)}72%{transform:perspective(1200px) rotateX(var(--camera-y)) rotateY(var(--camera-x)) translate3d(2px,0,0)}}
+@keyframes interactIn{from{opacity:0;transform:translateX(-50%) translateY(5px) scale(.96)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@keyframes pathFlicker{0%,100%{opacity:.08}50%{opacity:.25}}
+@keyframes whisper{0%,100%{opacity:.25;transform:translateX(-50%) translateY(0)}50%{opacity:.65;transform:translateX(-50%) translateY(-3px)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media (max-width:700px){
+  .room{transform:none!important;min-height:560px}
+  .room .hint{display:none}
+  .mobile-controls{display:flex}
+  .room .interact{bottom:126px;left:auto;right:12px;transform:none}
+  .room .interact:hover,.room .interact:focus-visible{transform:translateY(-2px)}
+  .room .interact span{display:none}
+  .room .echo-whisper{top:7%;max-width:75%;text-align:center}
+  .room .echo-state,.room .memory-counter{top:auto;bottom:18px}
+  .room .echo-state{right:12px;bottom:98px}
+  .room .memory-counter{left:12px;bottom:18px}
+}
+@media (prefers-reduced-motion:reduce){
+  .room,.room .player,.room .echo-figure,.room .interact{transition:none}
+  .room.impact-soft,.room.impact-strong,.room .echo-whisper,.room .memory-path i,.ending-choice-card,.choice-card,.ending-card{animation:none}
+}
