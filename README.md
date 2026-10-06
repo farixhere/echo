@@ -35,3 +35,19 @@ Open `http://localhost:3000`.
 ## V1 boundaries
 
 No accounts, backend, AI, multiplayer, payments, or database. The goal is a polished vertical slice before adding infrastructure.
+
+
+## Stage 10 — Replay / Ending Memory
+
+The replay layer is now complete. ECHO remembers not only what happened inside a run, but which endings and choices shaped previous runs.
+
+- 8-ending archive with locked/unlocked states and discovery clues
+- Persistent run history / branch map
+- “What Changed” comparison panel
+- New Game+ state after the first ending
+- Ending collection survives replay
+- Run records preserve the three memory choices and final decision
+- Replay history is stored locally and capped to the most recent 24 completed runs
+- Mobile-friendly archive UI and reduced-motion support
+
+No backend is required; replay memory remains local to the player's browser.
