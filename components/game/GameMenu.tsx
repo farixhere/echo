@@ -69,7 +69,7 @@ export default function GameMenu({
       <div className="game-menu-inner">
         <header className="menu-brand">
           <div>
-            <span className="menu-eyebrow">A MEMORY GAME · STAGE 11</span>
+            <span className="menu-eyebrow">A MEMORY GAME · STAGE 14</span>
             <h2>ECHO</h2>
           </div>
           <span className="menu-status"><i /> {newGamePlus ? 'MEMORY PERSISTS' : 'ROOM DORMANT'}</span>
@@ -139,7 +139,7 @@ export default function GameMenu({
                 <h4>The room remembers what you do.</h4>
                 <p>Designed as an atmospheric exploration game about memory, consequence and the strange feeling that a place can know you.</p>
                 <div><b>Built with</b><span>Next.js · React · TypeScript · Web Audio</span></div>
-                <div><b>Project</b><span>ECHO · Stage 11 — UI / Menu Polish</span></div>
+                <div><b>Project</b><span>ECHO · Stage 14 — Final Release</span></div>
                 <small>Made with care. Best experienced with headphones.</small>
               </div>
             )}
