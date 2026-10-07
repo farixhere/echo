@@ -34,6 +34,10 @@ export type EchoState = {
   doorAwake: boolean;
   hasSeenEcho: boolean;
   echoPhase: import('../lib/echo-encounter').EchoEncounterPhase;
+  orbTouched?: boolean;
+  doorUnlocked?: boolean;
+  windowSeen?: boolean;
+  stoneMarked?: boolean;
 };
 
 export type ChoiceTarget = Exclude<HotspotId, 'door'> | null;
