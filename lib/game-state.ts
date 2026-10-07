@@ -1,4 +1,6 @@
 import type { EchoState, HotspotId, WorldMemory, WorldConsequence } from '../types/game';
+export type { EchoState } from '../types/game';
+export type EchoChoice = 'orb' | 'window' | 'stone' | null;
 import type { EchoEncounterPhase } from './echo-encounter';
 
 export const initialEchoState: EchoState = {
