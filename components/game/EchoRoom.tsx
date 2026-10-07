@@ -90,6 +90,7 @@ export default function EchoRoom() {
     setState(loadEchoState());
     setWorld(loadWorldMemory());
     setHydrated(true);
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -364,18 +365,29 @@ export default function EchoRoom() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (choiceTarget) return;
-
-      if (event.key === 'ArrowUp' || event.key.toLowerCase() === 'w') moveBy(0, -3);
-      if (event.key === 'ArrowDown' || event.key.toLowerCase() === 's') moveBy(0, 3);
-      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') moveBy(-3, 0);
-      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') moveBy(3, 0);
-      if (event.key === ' ' || event.key === 'Enter') interact();
+      const key = event.key.toLowerCase();
+      if (key === 'escape') {
+        event.preventDefault();
+        setMenuOpen((open) => !open);
+        setReplayPanel('none');
+        setChoiceTarget(null);
+        return;
+      }
+      if (menuOpen || replayPanel !== 'none' || choiceTarget || finalChoice || ending) return;
+      if (event.key === 'ArrowUp' || key === 'w') { event.preventDefault(); moveBy(0, -3); }
+      if (event.key === 'ArrowDown' || key === 's') { event.preventDefault(); moveBy(0, 3); }
+      if (event.key === 'ArrowLeft' || key === 'a') { event.preventDefault(); moveBy(-3, 0); }
+      if (event.key === 'ArrowRight' || key === 'd') { event.preventDefault(); moveBy(3, 0); }
+      if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); interact(); }
     };
-
+    const onVisibility = () => { if (document.hidden) setMenuOpen(true); };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  });
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [choiceTarget, ending, finalChoice, menuOpen, replayPanel]);
 
   const hasProgress = world.runs > 0 || state.discovered.length > 0 || (world.endingsSeen?.length ?? 0) > 0 || Boolean(world.orbChoice || world.windowChoice || world.stoneChoice);
 
