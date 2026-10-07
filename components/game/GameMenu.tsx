@@ -61,6 +61,13 @@ export default function GameMenu({
     document.documentElement.classList.toggle('echo-reduced-motion', next);
   }
 
+  async function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch {}
+  }
+
   const title = panel === 'menu' ? 'THE ROOM REMEMBERS' : panel === 'settings' ? 'SETTINGS' : panel === 'controls' ? 'CONTROLS' : 'CREDITS';
 
   return (
@@ -117,6 +124,10 @@ export default function GameMenu({
                 <button type="button" onClick={toggleMotion}>
                   <span><b>REDUCED MOTION</b><small>Limit camera movement, pulses and transitions.</small></span>
                   <strong className={reducedMotion ? 'on' : ''}>{reducedMotion ? 'ON' : 'OFF'}</strong>
+                </button>
+                <button type="button" onClick={toggleFullscreen}>
+                  <span><b>FULLSCREEN</b><small>Use the full screen for a more focused game view.</small></span>
+                  <strong>ENTER</strong>
                 </button>
                 <div className="settings-note">Your choices, endings and replay history are stored locally on this device.</div>
               </div>
