@@ -10,18 +10,18 @@ type Props = {
   route: string;
   echoActive: boolean;
   echoResolved: boolean;
+  revisited?: boolean;
 };
 
-export default function EnvironmentEvolution({ orbTaken, windowOpened, stoneMoved, complete, route, echoActive, echoResolved }: Props) {
+export default function EnvironmentEvolution({ orbTaken, windowOpened, stoneMoved, complete, route, echoActive, echoResolved, revisited = false }: Props) {
   const rain = Array.from({ length: 18 }, (_, i) => i);
   const dust = Array.from({ length: 10 }, (_, i) => i);
   const memoryLevel = Number(orbTaken) + Number(windowOpened) + Number(stoneMoved);
-  const runLevel = 0;
-  const instability = Math.min(1, memoryLevel / 3 + (runLevel > 0 ? 0.12 : 0));
+  const instability = Math.min(1, memoryLevel / 3 + (revisited ? 0.12 : 0));
   const style = { '--instability': instability } as CSSProperties;
 
   return (
-    <div className={['environment-evolution',`memory-stage-${memoryLevel}`,complete?'environment-final':'',echoActive?'environment-echo':'',echoResolved?'environment-echo-resolved':'',orbTaken?'environment-orb-taken':'',windowOpened?'environment-window-open':'',stoneMoved?'environment-stone-moved':'',`environment-route-${route}`].filter(Boolean).join(' ')} style={style} aria-hidden="true">
+    <div className={['environment-evolution',`memory-stage-${memoryLevel}`,complete?'environment-final':'',echoActive?'environment-echo':'',echoResolved?'environment-echo-resolved':'',orbTaken?'environment-orb-taken':'',windowOpened?'environment-window-open':'',stoneMoved?'environment-stone-moved':'',revisited?'environment-revisited':'',`environment-route-${route}`].filter(Boolean).join(' ')} style={style} aria-hidden="true">
       <div className="environment-ceiling" /><div className="ceiling-light" />
       <div className="ceiling-fissure fissure-a" /><div className="ceiling-fissure fissure-b" />
       <div className="wall-plane wall-left" /><div className="wall-plane wall-right" />

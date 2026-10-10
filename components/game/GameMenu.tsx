@@ -17,6 +17,10 @@ type Props = {
 };
 
 const MOTION_KEY = 'echo-reduced-motion';
+const GRAPHICS_KEY = 'echo-graphics-quality';
+type Graphics = 'low' | 'balanced' | 'high';
+const GRAPHICS_ORDER: Graphics[] = ['low', 'balanced', 'high'];
+const GRAPHICS_LABEL: Record<Graphics, string> = { low: 'LOW', balanced: 'BALANCED', high: 'HIGH' };
 
 export default function GameMenu({
   open,
@@ -31,6 +35,7 @@ export default function GameMenu({
   const [panel, setPanel] = useState<Panel>('menu');
   const [audio, setAudio] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [graphics, setGraphics] = useState<Graphics>('balanced');
 
   useEffect(() => {
     setAudio(isAudioEnabled());
@@ -38,6 +43,11 @@ export default function GameMenu({
     const value = saved === null ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : saved === 'true';
     setReducedMotion(value);
     document.documentElement.classList.toggle('echo-reduced-motion', value);
+
+    const savedGraphics = window.localStorage.getItem(GRAPHICS_KEY) as Graphics | null;
+    const gfx: Graphics = savedGraphics && GRAPHICS_ORDER.includes(savedGraphics) ? savedGraphics : 'balanced';
+    setGraphics(gfx);
+    applyGraphics(gfx);
   }, []);
 
   useEffect(() => {
@@ -59,6 +69,18 @@ export default function GameMenu({
     setReducedMotion(next);
     window.localStorage.setItem(MOTION_KEY, String(next));
     document.documentElement.classList.toggle('echo-reduced-motion', next);
+  }
+
+  function applyGraphics(value: Graphics) {
+    document.documentElement.classList.remove('gfx-low', 'gfx-balanced', 'gfx-high');
+    document.documentElement.classList.add(`gfx-${value}`);
+  }
+
+  function cycleGraphics() {
+    const next = GRAPHICS_ORDER[(GRAPHICS_ORDER.indexOf(graphics) + 1) % GRAPHICS_ORDER.length];
+    setGraphics(next);
+    window.localStorage.setItem(GRAPHICS_KEY, next);
+    applyGraphics(next);
   }
 
   async function toggleFullscreen() {
@@ -124,6 +146,10 @@ export default function GameMenu({
                 <button type="button" onClick={toggleMotion}>
                   <span><b>REDUCED MOTION</b><small>Limit camera movement, pulses and transitions.</small></span>
                   <strong className={reducedMotion ? 'on' : ''}>{reducedMotion ? 'ON' : 'OFF'}</strong>
+                </button>
+                <button type="button" onClick={cycleGraphics}>
+                  <span><b>GRAPHICS</b><small>Lighting, fog and particle density. Low is best for older phones.</small></span>
+                  <strong className="on">{GRAPHICS_LABEL[graphics]}</strong>
                 </button>
                 <button type="button" onClick={toggleFullscreen}>
                   <span><b>FULLSCREEN</b><small>Use the full screen for a more focused game view.</small></span>
