@@ -623,7 +623,7 @@ export default function EchoRoom() {
       >
         <div className="game-gesture" aria-hidden="true" />
         {secretHint && <button className="secret-discovery" onClick={() => setSecretHint(null)} type="button"><span>DISCOVERY FOUND</span><strong>{secretHint}</strong><em>TAP TO CONTINUE</em></button>}
-        <EnvironmentEvolution orbTaken={consequences.orbTaken} windowOpened={consequences.windowOpened} stoneMoved={consequences.stoneMoved} complete={consequences.hasCompleteSet} route={story.route} echoActive={echoActive} echoResolved={world.echoResolved === true} />
+        <EnvironmentEvolution orbTaken={consequences.orbTaken} windowOpened={consequences.windowOpened} stoneMoved={consequences.stoneMoved} complete={consequences.hasCompleteSet} route={story.route} echoActive={echoActive} echoResolved={world.echoResolved === true} revisited={world.runs > 0} />
         <Atmosphere discovered={state.discovered} onMove={moveTo} />
         <MysteryDoor
           awake={state.doorAwake}
