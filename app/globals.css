@@ -44,6 +44,14 @@ button:focus-visible { outline: 1px solid var(--e-gold); outline-offset: 3px; }
     radial-gradient(circle at 50% 15%, #262a1f, #080a07 45%, #020302 85%);
   position: relative;
 }
+/* 3D backdrop: when the real 3D canvas is running, let it show through the CSS room */
+.room-3d { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.room.has-3d .environment-evolution { background: none; }
+.room.has-3d .environment-evolution::before,
+.room.has-3d .environment-evolution::after,
+.room.has-3d .environment-ceiling,
+.room.has-3d .floor-shadow,
+.room.has-3d .wall-plane { opacity: .35; }
 .game-shell::before {
   /* fine cinematic grain — cheap, no image asset */
   content: '';

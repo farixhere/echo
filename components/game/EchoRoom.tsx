@@ -26,6 +26,7 @@ import { getEnding, type FinalChoice, type EndingState } from '../../lib/endings
 import Soundscape from './Soundscape';
 import EnvironmentEvolution from './EnvironmentEvolution';
 import GameMenu from './GameMenu';
+import Room3D from './Room3D';
 
 const spots: Record<HotspotId, [number, number]> = {
   orb: [48, 59],
@@ -79,6 +80,7 @@ export default function EchoRoom() {
   const [secretHint, setSecretHint] = useState<string | null>(null);
   const [replayPanel, setReplayPanel] = useState<'none' | 'archive' | 'map' | 'changes'>('none');
   const [menuOpen, setMenuOpen] = useState(true);
+  const [threeReady, setThreeReady] = useState(false);
 
   const consequences = useMemo(() => getWorldConsequences(world), [world]);
   const story = useMemo(() => getStoryState(world), [world]);
@@ -607,6 +609,7 @@ export default function EchoRoom() {
           consequences.stoneMoved ? 'stone-moved' : '',
           consequences.hasCompleteSet ? 'memory-complete' : '',
           `route-${story.route}`,
+          threeReady ? 'has-3d' : '',
           world.newGamePlus ? 'ng-plus' : '',
           impact !== 'none' ? `impact-${impact}` : '',
         ].filter(Boolean).join(' ')}
@@ -623,6 +626,15 @@ export default function EchoRoom() {
       >
         <div className="game-gesture" aria-hidden="true" />
         {secretHint && <button className="secret-discovery" onClick={() => setSecretHint(null)} type="button"><span>DISCOVERY FOUND</span><strong>{secretHint}</strong><em>TAP TO CONTINUE</em></button>}
+        <Room3D
+          enabled={hydrated}
+          onReady={setThreeReady}
+          orbTaken={consequences.orbTaken}
+          windowOpened={consequences.windowOpened}
+          stoneMoved={consequences.stoneMoved}
+          playerX={state.playerX}
+          playerY={state.playerY}
+        />
         <EnvironmentEvolution orbTaken={consequences.orbTaken} windowOpened={consequences.windowOpened} stoneMoved={consequences.stoneMoved} complete={consequences.hasCompleteSet} route={story.route} echoActive={echoActive} echoResolved={world.echoResolved === true} revisited={world.runs > 0} />
         <Atmosphere discovered={state.discovered} onMove={moveTo} />
         <MysteryDoor
