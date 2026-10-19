@@ -94,6 +94,9 @@ npm run start
 
 ECHO is being developed as a polished, browser-playable narrative experience. This repository documents the current vertical slice and its replay systems; it should not be read as a claim that online accounts or cloud saves are available.
 
+## 🎮 Gameplay Preview
+
+![ECHO gameplay](screenshots/gameplay.png)
 ---
 
 Created by [Faris](https://github.com/farixhere).
