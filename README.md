@@ -9,6 +9,14 @@ ECHO is an interactive narrative game built around exploration, meaningful choic
   <a href="https://github.com/farixhere/echo"><img src="https://img.shields.io/badge/Source-GitHub-181717?style=for-the-badge&logo=github" alt="ECHO source on GitHub" /></a>
 </p>
 
+## Take a look
+
+<a href="https://echo-dupekingsam-7855.vercel.app/">
+  <img src="https://s.wordpress.com/mshots/v1/https%3A%2F%2Fecho-dupekingsam-7855.vercel.app%2F?w=1200" alt="Live preview of the ECHO browser game" width="100%" />
+</a>
+
+*Preview captured from the live game website. Open the preview to play.*
+
 ## What makes ECHO different?
 
 ECHO is designed around memory: choices are not just dialogue options, they become part of the player's continuing story.
